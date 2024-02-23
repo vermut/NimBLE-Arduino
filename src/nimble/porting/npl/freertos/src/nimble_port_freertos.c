@@ -77,11 +77,25 @@ esp_err_t esp_nimble_disable(void)
     return ESP_OK;
 }
 
-// Compatibility wrappers for new functions
-void nimble_port_freertos_init(TaskFunction_t host_task_fn) {
-    esp_nimble_enable((void*)host_task_fn);
+
+/**
+ * @brief nimble_port_freertos_init - Adapt to native nimble api
+ *
+ * @param host_task_fn
+ */
+void
+nimble_port_freertos_init(TaskFunction_t host_task_fn)
+{
+    esp_nimble_enable(host_task_fn);
 }
-void nimble_port_freertos_deinit(void) {
+
+/**
+ * @brief nimble_port_freertos_deinit - Adapt to native nimble api
+ *
+ */
+void
+nimble_port_freertos_deinit(void)
+{
     esp_nimble_disable();
 }
 
@@ -131,4 +145,4 @@ nimble_port_freertos_get_hs_hwm(void)
     return uxTaskGetStackHighWaterMark(host_task_h);
 }
 
-#endif //ESP_PLATFORM
+#endif // ESP_PLATFORM
