@@ -212,6 +212,7 @@ bool NimBLEService::start() {
                 pChr_a[i].flags = (*chr_it)->m_properties;
                 pChr_a[i].min_key_size = 0;
                 pChr_a[i].val_handle = &(*chr_it)->m_handle;
+                pChr_a[i].cpfd = nullptr;
                 ++i;
             }
 
