@@ -580,7 +580,7 @@ bt_dh_key_gen(const uint8_t remote_pk[64], bt_dh_key_cb_t cb)
 {
     uint8_t dh[32];
 
-    if (ble_sm_alg_gen_dhkey((uint8_t *)&remote_pk[0], (uint8_t *)&remote_pk[32],
+    if (ble_sm_alg_gen_dhkey_((uint8_t *)&remote_pk[0], (uint8_t *)&remote_pk[32],
                               priv, dh)) {
         return -1;
     }
@@ -632,7 +632,7 @@ int
 bt_pub_key_gen(struct bt_pub_key_cb *new_cb)
 {
 
-    if (ble_sm_alg_gen_key_pair(pub, priv)) {
+    if (ble_sm_alg_gen_key_pair_(pub, priv)) {
         assert(0);
         return -1;
     }

@@ -506,19 +506,19 @@ ble_npl_eventq_deinit(struct ble_npl_eventq *evq)
 static inline struct ble_npl_event *
 ble_npl_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo)
 {
-    return npl_freertos_eventq_get(evq, tmo);
+    return npl_freertos_eventq_get_(evq, tmo);
 }
 
 static inline void
 ble_npl_eventq_put(struct ble_npl_eventq *evq, struct ble_npl_event *ev)
 {
-    npl_freertos_eventq_put(evq, ev);
+    npl_freertos_eventq_put_(evq, ev);
 }
 
 static inline void
 ble_npl_eventq_remove(struct ble_npl_eventq *evq, struct ble_npl_event *ev)
 {
-    npl_freertos_eventq_remove(evq, ev);
+    npl_freertos_eventq_remove_(evq, ev);
 }
 
 static inline void
@@ -569,49 +569,49 @@ ble_npl_event_set_arg(struct ble_npl_event *ev, void *arg)
 static inline ble_npl_error_t
 ble_npl_mutex_init(struct ble_npl_mutex *mu)
 {
-    return npl_freertos_mutex_init(mu);
+    return npl_freertos_mutex_init_(mu);
 }
 
 static inline ble_npl_error_t
 ble_npl_mutex_deinit(struct ble_npl_mutex *mu)
 {
-    return npl_freertos_mutex_deinit(mu);
+    return npl_freertos_mutex_deinit_(mu);
 }
 
 static inline ble_npl_error_t
 ble_npl_mutex_pend(struct ble_npl_mutex *mu, ble_npl_time_t timeout)
 {
-    return npl_freertos_mutex_pend(mu, timeout);
+    return npl_freertos_mutex_pend_(mu, timeout);
 }
 
 static inline ble_npl_error_t
 ble_npl_mutex_release(struct ble_npl_mutex *mu)
 {
-    return npl_freertos_mutex_release(mu);
+    return npl_freertos_mutex_release_(mu);
 }
 
 static inline ble_npl_error_t
 ble_npl_sem_init(struct ble_npl_sem *sem, uint16_t tokens)
 {
-    return npl_freertos_sem_init(sem, tokens);
+    return npl_freertos_sem_init_(sem, tokens);
 }
 
 static inline ble_npl_error_t
 ble_npl_sem_deinit(struct ble_npl_sem *sem)
 {
-    return npl_freertos_sem_deinit(sem);
+    return npl_freertos_sem_deinit_(sem);
 }
 
 static inline ble_npl_error_t
 ble_npl_sem_pend(struct ble_npl_sem *sem, ble_npl_time_t timeout)
 {
-    return npl_freertos_sem_pend(sem, timeout);
+    return npl_freertos_sem_pend_(sem, timeout);
 }
 
 static inline ble_npl_error_t
 ble_npl_sem_release(struct ble_npl_sem *sem)
 {
-    return npl_freertos_sem_release(sem);
+    return npl_freertos_sem_release_(sem);
 }
 
 static inline uint16_t
@@ -624,44 +624,44 @@ static inline int
 ble_npl_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq,
                      ble_npl_event_fn *ev_cb, void *ev_arg)
 {
-    return npl_freertos_callout_init(co, evq, ev_cb, ev_arg);
+    return npl_freertos_callout_init_(co, evq, ev_cb, ev_arg);
 }
 
 static inline void
 ble_npl_callout_deinit(struct ble_npl_callout *co)
 {
-    npl_freertos_callout_deinit(co);
+    npl_freertos_callout_deinit_(co);
 }
 
 static inline ble_npl_error_t
 ble_npl_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
 {
-    return npl_freertos_callout_reset(co, ticks);
+    return npl_freertos_callout_reset_(co, ticks);
 }
 
 static inline void
 ble_npl_callout_stop(struct ble_npl_callout *co)
 {
-    npl_freertos_callout_stop(co);
+    npl_freertos_callout_stop_(co);
 }
 
 static inline bool
 ble_npl_callout_is_active(struct ble_npl_callout *co)
 {
-    return npl_freertos_callout_is_active(co);
+    return npl_freertos_callout_is_active_(co);
 }
 
 static inline ble_npl_time_t
 ble_npl_callout_get_ticks(struct ble_npl_callout *co)
 {
-    return npl_freertos_callout_get_ticks(co);
+    return npl_freertos_callout_get_ticks_(co);
 }
 
 static inline uint32_t
 ble_npl_callout_remaining_ticks(struct ble_npl_callout *co,
                                 ble_npl_time_t time)
 {
-    return npl_freertos_callout_remaining_ticks(co, time);
+    return npl_freertos_callout_remaining_ticks_(co, time);
 }
 
 static inline void
@@ -679,7 +679,7 @@ ble_npl_time_get(void)
 static inline ble_npl_error_t
 ble_npl_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks)
 {
-    return npl_freertos_time_ms_to_ticks(ms, out_ticks);
+    return npl_freertos_time_ms_to_ticks_(ms, out_ticks);
 }
 
 static inline ble_npl_error_t
@@ -721,19 +721,19 @@ ble_npl_hw_is_in_critical(void)
 #endif
 
 #ifdef ESP_PLATFORM
-extern portMUX_TYPE ble_port_mutex;
+extern portMUX_TYPE ble_port_mutex_;
 //critical section
 static inline uint32_t
 ble_npl_hw_enter_critical(void)
 {
-    portENTER_CRITICAL(&ble_port_mutex);
+    portENTER_CRITICAL(&ble_port_mutex_);
     return 0;
 }
 
 static inline void
 ble_npl_hw_exit_critical(uint32_t ctx)
 {
-    portEXIT_CRITICAL(&ble_port_mutex);
+    portEXIT_CRITICAL(&ble_port_mutex_);
 }
 
 #else

@@ -27,8 +27,8 @@
 #include "esp_err.h"
 #endif
 
-static STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list =
-    STAILQ_HEAD_INITIALIZER(g_msys_pool_list);
+static STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list_ =
+    STAILQ_HEAD_INITIALIZER(g_msys_pool_list_);
 
 #if CONFIG_BT_NIMBLE_ENABLED
 #define OS_MSYS_1_BLOCK_COUNT MYNEWT_VAL(MSYS_1_BLOCK_COUNT)
@@ -117,7 +117,7 @@ IRAM_ATTR os_msys_sanity(struct os_sanity_check *sc, void *arg)
     int idx;
 
     idx = 0;
-    STAILQ_FOREACH(omp, &g_msys_pool_list, omp_next) {
+    STAILQ_FOREACH(omp, &g_msys_pool_list_, omp_next) {
         min_count = os_msys_sanity_min_count(idx);
         if (omp->omp_pool->mp_num_free < min_count) {
             return OS_ENOMEM;
@@ -186,7 +186,7 @@ os_msys_buf_free(void)
 }
 #endif
 
-void os_msys_init(void)
+void os_msys_init_(void)
 {
 #if OS_MSYS_SANITY_ENABLED
     int rc;

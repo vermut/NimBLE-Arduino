@@ -182,9 +182,9 @@ typedef __uint128_t os_membuf_t;
  *
  * @return os_error_t
  */
-os_error_t r_os_mempool_init(struct os_mempool *mp, uint16_t blocks,
+os_error_t r_os_mempool_init_(struct os_mempool *mp, uint16_t blocks,
                            uint32_t block_size, void *membuf, const char *name);
-#define os_mempool_init r_os_mempool_init
+#define os_mempool_init r_os_mempool_init_
 /**
  * Initializes an extended memory pool.  Extended attributes (e.g., callbacks)
  * are not specified when this function is called; they are assigned manually
@@ -198,9 +198,9 @@ os_error_t r_os_mempool_init(struct os_mempool *mp, uint16_t blocks,
  *
  * @return os_error_t
  */
-os_error_t r_os_mempool_ext_init(struct os_mempool_ext *mpe, uint16_t blocks,
+os_error_t r_os_mempool_ext_init_(struct os_mempool_ext *mpe, uint16_t blocks,
                                uint32_t block_size, void *membuf, const char *name);
-#define os_mempool_ext_init r_os_mempool_ext_init
+#define os_mempool_ext_init r_os_mempool_ext_init_
 /**
  * Removes the specified mempool from the list of initialized mempools.
  *
@@ -221,8 +221,8 @@ os_error_t r_os_mempool_unregister(struct os_mempool *mp);
  *
  * @return os_error_t
  */
-os_error_t r_os_mempool_clear(struct os_mempool *mp);
-#define os_mempool_clear r_os_mempool_clear
+os_error_t r_os_mempool_clear_(struct os_mempool *mp);
+#define os_mempool_clear r_os_mempool_clear_
 
 
 /**
@@ -235,8 +235,8 @@ os_error_t r_os_mempool_clear(struct os_mempool *mp);
  *                                  check;
  *                              false if the memory pool is corrupt.
  */
-bool r_os_mempool_is_sane(const struct os_mempool *mp);
-#define os_mempool_is_sane r_os_mempool_is_sane
+bool r_os_mempool_is_sane_(const struct os_mempool *mp);
+#define os_mempool_is_sane r_os_mempool_is_sane_
 
 
 /**
@@ -248,8 +248,8 @@ bool r_os_mempool_is_sane(const struct os_mempool *mp);
  * @return                      0 if the block does not belong to the mempool;
  *                              1 if the block does belong to the mempool.
  */
-int r_os_memblock_from(const struct os_mempool *mp, const void *block_addr);
-#define os_memblock_from r_os_memblock_from
+int r_os_memblock_from_(const struct os_mempool *mp, const void *block_addr);
+#define os_memblock_from r_os_memblock_from_
 
 
 /**
@@ -259,8 +259,8 @@ int r_os_memblock_from(const struct os_mempool *mp, const void *block_addr);
  *
  * @return void* Pointer to block if available; NULL otherwise
  */
-void *r_os_memblock_get(struct os_mempool *mp);
-#define os_memblock_get r_os_memblock_get
+void *r_os_memblock_get_(struct os_mempool *mp);
+#define os_memblock_get r_os_memblock_get_
 /**
  * Puts the memory block back into the pool, ignoring the put callback, if any.
  * This function should only be called from a put callback to free a block
@@ -271,8 +271,8 @@ void *r_os_memblock_get(struct os_mempool *mp);
  *
  * @return os_error_t
  */
-os_error_t r_os_memblock_put_from_cb(struct os_mempool *mp, void *block_addr);
-#define os_memblock_put_from_cb r_os_memblock_put_from_cb
+os_error_t r_os_memblock_put_from_cb_(struct os_mempool *mp, void *block_addr);
+#define os_memblock_put_from_cb r_os_memblock_put_from_cb_
 
 
 /**
@@ -283,8 +283,8 @@ os_error_t r_os_memblock_put_from_cb(struct os_mempool *mp, void *block_addr);
  *
  * @return os_error_t
  */
-os_error_t r_os_memblock_put(struct os_mempool *mp, void *block_addr);
-#define os_memblock_put r_os_memblock_put
+os_error_t r_os_memblock_put_(struct os_mempool *mp, void *block_addr);
+#define os_memblock_put r_os_memblock_put_
 
 #else
 /**

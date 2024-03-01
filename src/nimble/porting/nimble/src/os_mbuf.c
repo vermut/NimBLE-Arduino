@@ -32,6 +32,7 @@
  * SUCH DAMAGE.
  *
  */
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 
 #include "../include/os/os.h"
 #include "../include/os/os_trace_api.h"
@@ -56,8 +57,8 @@
  *   @{
  */
 
-STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list =
-    STAILQ_HEAD_INITIALIZER(g_msys_pool_list);
+STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list_ =
+    STAILQ_HEAD_INITIALIZER(g_msys_pool_list_);
 
 
 int
@@ -131,16 +132,16 @@ os_msys_register(struct os_mbuf_pool *new_pool)
     struct os_mbuf_pool *pool;
 
     pool = NULL;
-    STAILQ_FOREACH(pool, &g_msys_pool_list, omp_next) {
+    STAILQ_FOREACH(pool, &g_msys_pool_list_, omp_next) {
         if (new_pool->omp_databuf_len > pool->omp_databuf_len) {
             break;
         }
     }
 
     if (pool) {
-        STAILQ_INSERT_AFTER(&g_msys_pool_list, pool, new_pool, omp_next);
+        STAILQ_INSERT_AFTER(&g_msys_pool_list_, pool, new_pool, omp_next);
     } else {
-        STAILQ_INSERT_TAIL(&g_msys_pool_list, new_pool, omp_next);
+        STAILQ_INSERT_TAIL(&g_msys_pool_list_, new_pool, omp_next);
     }
 
     return (0);
@@ -149,7 +150,7 @@ os_msys_register(struct os_mbuf_pool *new_pool)
 void
 os_msys_reset(void)
 {
-    STAILQ_INIT(&g_msys_pool_list);
+    STAILQ_INIT(&g_msys_pool_list_);
 }
 
 static struct os_mbuf_pool *
@@ -158,14 +159,14 @@ _os_msys_find_pool(uint16_t dsize)
     struct os_mbuf_pool *pool;
 
     pool = NULL;
-    STAILQ_FOREACH(pool, &g_msys_pool_list, omp_next) {
+    STAILQ_FOREACH(pool, &g_msys_pool_list_, omp_next) {
         if (dsize <= pool->omp_databuf_len) {
             break;
         }
     }
 
     if (!pool) {
-        pool = STAILQ_LAST(&g_msys_pool_list, os_mbuf_pool, omp_next);
+        pool = STAILQ_LAST(&g_msys_pool_list_, os_mbuf_pool, omp_next);
     }
 
     return (pool);
@@ -215,7 +216,7 @@ os_msys_count(void)
     int total;
 
     total = 0;
-    STAILQ_FOREACH(omp, &g_msys_pool_list, omp_next) {
+    STAILQ_FOREACH(omp, &g_msys_pool_list_, omp_next) {
         total += omp->omp_pool->mp_num_blocks;
     }
 
@@ -229,7 +230,7 @@ os_msys_num_free(void)
     int total;
 
     total = 0;
-    STAILQ_FOREACH(omp, &g_msys_pool_list, omp_next) {
+    STAILQ_FOREACH(omp, &g_msys_pool_list_, omp_next) {
         total += omp->omp_pool->mp_num_free;
     }
 

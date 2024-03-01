@@ -164,7 +164,7 @@ ble_sm_gen_pub_priv(uint8_t *pub, uint8_t *priv)
     }
 #endif
 
-    rc = ble_sm_alg_gen_key_pair(pub, priv);
+    rc = ble_sm_alg_gen_key_pair_(pub, priv);
     if (rc != 0) {
         return rc;
     }
@@ -633,7 +633,7 @@ ble_sm_sc_public_key_rx(uint16_t conn_handle, struct os_mbuf **om,
         res->out_of_order = 1;
     } else {
         memcpy(&proc->pub_key_peer, cmd, sizeof(*cmd));
-        rc = ble_sm_alg_gen_dhkey(proc->pub_key_peer.x,
+        rc = ble_sm_alg_gen_dhkey_(proc->pub_key_peer.x,
                                   proc->pub_key_peer.y,
                                   ble_sm_sc_priv_key,
                                   proc->dhkey);

@@ -262,8 +262,8 @@ _os_mbuf_trailingspace(struct os_mbuf *om)
  *
  * @return                      0 on success, non-zero on failure.
  */
-int r_os_mqueue_init(struct os_mqueue *mq, ble_npl_event_fn *ev_cb, void *arg);
-#define os_mqueue_init r_os_mqueue_init
+int r_os_mqueue_init_(struct os_mqueue *mq, ble_npl_event_fn *ev_cb, void *arg);
+#define os_mqueue_init r_os_mqueue_init_
 
 
 /**
@@ -273,8 +273,8 @@ int r_os_mqueue_init(struct os_mqueue *mq, ble_npl_event_fn *ev_cb, void *arg);
  *
  * @return The next mbuf in the queue, or NULL if queue has no mbufs.
  */
-struct os_mbuf *r_os_mqueue_get(struct os_mqueue *);
-#define os_mqueue_get r_os_mqueue_get
+struct os_mbuf *r_os_mqueue_get_(struct os_mqueue *);
+#define os_mqueue_get r_os_mqueue_get_
 /**
  * Adds a packet (i.e. packet header mbuf) to an mqueue. The event associated
  * with the mqueue gets posted to the specified eventq.
@@ -285,8 +285,8 @@ struct os_mbuf *r_os_mqueue_get(struct os_mqueue *);
  *
  * @return 0 on success, non-zero on failure.
  */
-int r_os_mqueue_put(struct os_mqueue *, struct ble_npl_eventq *, struct os_mbuf *);
-#define os_mqueue_put r_os_mqueue_put
+int r_os_mqueue_put_(struct os_mqueue *, struct ble_npl_eventq *, struct os_mbuf *);
+#define os_mqueue_put r_os_mqueue_put_
 
 
 /**
@@ -305,8 +305,8 @@ int r_os_mqueue_put(struct os_mqueue *, struct ble_npl_eventq *, struct os_mbuf 
  *
  * @return 0 on success, non-zero on failure
  */
-int r_os_msys_register(struct os_mbuf_pool *);
-#define os_msys_register r_os_msys_register
+int r_os_msys_register_(struct os_mbuf_pool *);
+#define os_msys_register r_os_msys_register_
 
 
 /**
@@ -318,13 +318,13 @@ int r_os_msys_register(struct os_mbuf_pool *);
  *
  * @return A freshly allocated mbuf on success, NULL on failure.
  */
-struct os_mbuf *r_os_msys_get(uint16_t dsize, uint16_t leadingspace);
-#define os_msys_get r_os_msys_get
+struct os_mbuf *r_os_msys_get_(uint16_t dsize, uint16_t leadingspace);
+#define os_msys_get r_os_msys_get_
 /**
  * De-registers all mbuf pools from msys.
  */
-void r_os_msys_reset(void);
-#define os_msys_reset r_os_msys_reset
+void r_os_msys_reset_(void);
+#define os_msys_reset r_os_msys_reset_
 
 
 /**
@@ -336,15 +336,15 @@ void r_os_msys_reset(void);
  *
  * @return A freshly allocated mbuf on success, NULL on failure.
  */
-struct os_mbuf *r_os_msys_get_pkthdr(uint16_t dsize, uint16_t user_hdr_len);
-#define os_msys_get_pkthdr r_os_msys_get_pkthdr
+struct os_mbuf *r_os_msys_get_pkthdr_(uint16_t dsize, uint16_t user_hdr_len);
+#define os_msys_get_pkthdr r_os_msys_get_pkthdr_
 /**
  * Count the number of blocks in all the mbuf pools that are allocated.
  *
  * @return total number of blocks allocated in Msys
  */
-int r_os_msys_count(void);
-#define os_msys_count r_os_msys_count
+int r_os_msys_count_(void);
+#define os_msys_count r_os_msys_count_
 
 
 /**
@@ -352,8 +352,8 @@ int r_os_msys_count(void);
  *
  * @return Number of free blocks available in Msys
  */
-int r_os_msys_num_free(void);
-#define os_msys_num_free r_os_msys_num_free
+int r_os_msys_num_free_(void);
+#define os_msys_num_free r_os_msys_num_free_
 
 
 /**
@@ -366,9 +366,9 @@ int r_os_msys_num_free(void);
  *
  * @return 0 on success, error code on failure.
  */
-int r_os_mbuf_pool_init(struct os_mbuf_pool *, struct os_mempool *mp,
+int r_os_mbuf_pool_init_(struct os_mbuf_pool *, struct os_mempool *mp,
                       uint16_t, uint16_t);
-#define os_mbuf_pool_init r_os_mbuf_pool_init
+#define os_mbuf_pool_init r_os_mbuf_pool_init_
 /**
  * Get an mbuf from the mbuf pool.  The mbuf is allocated, and initialized
  * prior to being returned.
@@ -379,8 +379,8 @@ int r_os_mbuf_pool_init(struct os_mbuf_pool *, struct os_mempool *mp,
  *
  * @return An initialized mbuf on success, and NULL on failure.
  */
-struct os_mbuf *r_os_mbuf_get(struct os_mbuf_pool *omp, uint16_t);
-#define os_mbuf_get r_os_mbuf_get
+struct os_mbuf *r_os_mbuf_get_(struct os_mbuf_pool *omp, uint16_t);
+#define os_mbuf_get r_os_mbuf_get_
 /**
  * Allocate a new packet header mbuf out of the os_mbuf_pool.
  *
@@ -389,9 +389,9 @@ struct os_mbuf *r_os_mbuf_get(struct os_mbuf_pool *omp, uint16_t);
  *
  * @return A freshly allocated mbuf on success, NULL on failure.
  */
-struct os_mbuf *r_os_mbuf_get_pkthdr(struct os_mbuf_pool *omp,
+struct os_mbuf *r_os_mbuf_get_pkthdr_(struct os_mbuf_pool *omp,
                                    uint8_t pkthdr_len);
-#define os_mbuf_get_pkthdr r_os_mbuf_get_pkthdr
+#define os_mbuf_get_pkthdr r_os_mbuf_get_pkthdr_
 /**
  * Duplicate a chain of mbufs.  Return the start of the duplicated chain.
  *
@@ -400,8 +400,8 @@ struct os_mbuf *r_os_mbuf_get_pkthdr(struct os_mbuf_pool *omp,
  *
  * @return A pointer to the new chain of mbufs
  */
-struct os_mbuf *r_os_mbuf_dup(struct os_mbuf *m);
-#define os_mbuf_dup r_os_mbuf_dup
+struct os_mbuf *r_os_mbuf_dup_(struct os_mbuf *m);
+#define os_mbuf_dup r_os_mbuf_dup_
 /**
  * Locates the specified absolute offset within an mbuf chain.  The offset
  * can be one past than the total length of the chain, but no greater.
@@ -415,9 +415,9 @@ struct os_mbuf *r_os_mbuf_dup(struct os_mbuf *m);
  *                                  success.
  *                              NULL if the specified offset is out of bounds.
  */
-struct os_mbuf *r_os_mbuf_off(const struct os_mbuf *om, int off,
+struct os_mbuf *r_os_mbuf_off_(const struct os_mbuf *om, int off,
                             uint16_t *out_off);
-#define os_mbuf_off r_os_mbuf_off
+#define os_mbuf_off r_os_mbuf_off_
 
 /*
  * Copy data from an mbuf chain starting "off" bytes from the beginning,
@@ -431,8 +431,8 @@ struct os_mbuf *r_os_mbuf_off(const struct os_mbuf *om, int off,
  * @return                      0 on success;
  *                              -1 if the mbuf does not contain enough data.
  */
-int r_os_mbuf_copydata(const struct os_mbuf *m, int off, int len, void *dst);
-#define os_mbuf_copydata r_os_mbuf_copydata
+int r_os_mbuf_copydata_(const struct os_mbuf *m, int off, int len, void *dst);
+#define os_mbuf_copydata r_os_mbuf_copydata_
 
 
 /**
@@ -447,8 +447,8 @@ int r_os_mbuf_copydata(const struct os_mbuf *m, int off, int len, void *dst);
  * @return                      The length, in bytes, of the provided mbuf
  *                                  chain.
  */
-uint16_t r_os_mbuf_len(const struct os_mbuf *om);
-#define os_mbuf_len r_os_mbuf_len
+uint16_t r_os_mbuf_len_(const struct os_mbuf *om);
+#define os_mbuf_len r_os_mbuf_len_
 
 
 /**
@@ -460,8 +460,8 @@ uint16_t r_os_mbuf_len(const struct os_mbuf *om);
  *
  * @return 0 on success, and an error code on failure
  */
-int r_os_mbuf_append(struct os_mbuf *m, const void *, uint16_t);
-#define os_mbuf_append r_os_mbuf_append
+int r_os_mbuf_append_(struct os_mbuf *m, const void *, uint16_t);
+#define os_mbuf_append r_os_mbuf_append_
 
 
 /**
@@ -479,9 +479,9 @@ int r_os_mbuf_append(struct os_mbuf *m, const void *, uint16_t);
  *                              OS_EINVAL if the specified range extends beyond
  *                                  the end of the source mbuf chain.
  */
-int r_os_mbuf_appendfrom(struct os_mbuf *dst, const struct os_mbuf *src,
+int r_os_mbuf_appendfrom_(struct os_mbuf *dst, const struct os_mbuf *src,
                        uint16_t src_off, uint16_t len);
-#define os_mbuf_appendfrom r_os_mbuf_appendfrom
+#define os_mbuf_appendfrom r_os_mbuf_appendfrom_
 /**
  * Release a mbuf back to the pool
  *
@@ -490,8 +490,8 @@ int r_os_mbuf_appendfrom(struct os_mbuf *dst, const struct os_mbuf *src,
  *
  * @return 0 on success, -1 on failure
  */
-int r_os_mbuf_free(struct os_mbuf *mb);
-#define os_mbuf_free r_os_mbuf_free
+int r_os_mbuf_free_(struct os_mbuf *mb);
+#define os_mbuf_free r_os_mbuf_free_
 
 
 /**
@@ -502,8 +502,8 @@ int r_os_mbuf_free(struct os_mbuf *mb);
  *
  * @return 0 on success, -1 on failure
  */
-int r_os_mbuf_free_chain(struct os_mbuf *om);
-#define os_mbuf_free_chain r_os_mbuf_free_chain
+int r_os_mbuf_free_chain_(struct os_mbuf *om);
+#define os_mbuf_free_chain r_os_mbuf_free_chain_
 
 
 /**
@@ -515,8 +515,8 @@ int r_os_mbuf_free_chain(struct os_mbuf *om);
  *                from the head of the mbuf, if negative, trims from the
  *                tail of the mbuf.
  */
-void r_os_mbuf_adj(struct os_mbuf *mp, int req_len);
-#define os_mbuf_adj r_os_mbuf_adj
+void r_os_mbuf_adj_(struct os_mbuf *mp, int req_len);
+#define os_mbuf_adj r_os_mbuf_adj_
 
 
 
@@ -534,8 +534,8 @@ void r_os_mbuf_adj(struct os_mbuf *mp, int req_len);
  *                              A memcmp return code if there is a mismatch;
  *                              INT_MAX if the mbuf is too short.
  */
-int r_os_mbuf_cmpf(const struct os_mbuf *om, int off, const void *data, int len);
-#define os_mbuf_cmpf r_os_mbuf_cmpf
+int r_os_mbuf_cmpf_(const struct os_mbuf *om, int off, const void *data, int len);
+#define os_mbuf_cmpf r_os_mbuf_cmpf_
 
 
 /**
@@ -557,10 +557,10 @@ int r_os_mbuf_cmpf(const struct os_mbuf *om, int off, const void *data, int len)
  *                              INT_MAX if a specified range extends beyond the
  *                                  end of its corresponding mbuf chain.
  */
-int r_os_mbuf_cmpm(const struct os_mbuf *om1, uint16_t offset1,
+int r_os_mbuf_cmpm_(const struct os_mbuf *om1, uint16_t offset1,
                  const struct os_mbuf *om2, uint16_t offset2,
                  uint16_t len);
-#define os_mbuf_cmpm r_os_mbuf_cmpm
+#define os_mbuf_cmpm r_os_mbuf_cmpm_
 /**
  * Increases the length of an mbuf chain by adding data to the front.  If there
  * is insufficient room in the leading mbuf, additional mbufs are allocated and
@@ -576,8 +576,8 @@ int r_os_mbuf_cmpm(const struct os_mbuf *om1, uint16_t offset1,
  * @return                      The new head of the chain on success;
  *                              NULL on failure.
  */
-struct os_mbuf *r_os_mbuf_prepend(struct os_mbuf *om, int len);
-#define os_mbuf_prepend r_os_mbuf_prepend
+struct os_mbuf *r_os_mbuf_prepend_(struct os_mbuf *om, int len);
+#define os_mbuf_prepend r_os_mbuf_prepend_
 /**
  * Prepends a chunk of empty data to the specified mbuf chain and ensures the
  * chunk is contiguous.  If either operation fails, the specified mbuf chain is
@@ -589,8 +589,8 @@ struct os_mbuf *r_os_mbuf_prepend(struct os_mbuf *om, int len);
  * @return                      The modified mbuf on success;
  *                              NULL on failure (and the mbuf chain is freed).
  */
-struct os_mbuf *r_os_mbuf_prepend_pullup(struct os_mbuf *om, uint16_t len);
-#define os_mbuf_prepend_pullup r_os_mbuf_prepend_pullup
+struct os_mbuf *r_os_mbuf_prepend__pullup(struct os_mbuf *om, uint16_t len);
+#define os_mbuf_prepend_pullup r_os_mbuf_prepend__pullup
 /**
  * Copies the contents of a flat buffer into an mbuf chain, starting at the
  * specified destination offset.  If the mbuf is too small for the source data,
@@ -605,8 +605,8 @@ struct os_mbuf *r_os_mbuf_prepend_pullup(struct os_mbuf *om, uint16_t len);
  *
  * @return                      0 on success; nonzero on failure.
  */
-int r_os_mbuf_copyinto(struct os_mbuf *om, int off, const void *src, int len);
-#define os_mbuf_copyinto r_os_mbuf_copyinto
+int r_os_mbuf_copyinto_(struct os_mbuf *om, int off, const void *src, int len);
+#define os_mbuf_copyinto r_os_mbuf_copyinto_
 
 
 /**
@@ -617,8 +617,8 @@ int r_os_mbuf_copyinto(struct os_mbuf *om, int off, const void *src, int len);
  * @param first                 The mbuf chain being attached to.
  * @param second                The mbuf chain that gets attached.
  */
-void r_os_mbuf_concat(struct os_mbuf *first, struct os_mbuf *second);
-#define os_mbuf_concat r_os_mbuf_concat
+void r_os_mbuf_concat_(struct os_mbuf *first, struct os_mbuf *second);
+#define os_mbuf_concat r_os_mbuf_concat_
 
 
 
@@ -635,8 +635,8 @@ void r_os_mbuf_concat(struct os_mbuf *first, struct os_mbuf *second);
  * @return                      A pointer to the new data on success;
  *                              NULL on failure.
  */
-void *r_os_mbuf_extend(struct os_mbuf *om, uint16_t len);
-#define os_mbuf_extend r_os_mbuf_extend
+void *r_os_mbuf_extend_(struct os_mbuf *om, uint16_t len);
+#define os_mbuf_extend r_os_mbuf_extend_
 /**
  * Rearrange a mbuf chain so that len bytes are contiguous,
  * and in the data area of an mbuf (so that OS_MBUF_DATA() will
@@ -653,8 +653,8 @@ void *r_os_mbuf_extend(struct os_mbuf *om, uint16_t len);
  *
  * @return The contiguous mbuf chain on success, NULL on failure.
  */
-struct os_mbuf *r_os_mbuf_pullup(struct os_mbuf *om, uint16_t len);
-#define os_mbuf_pullup r_os_mbuf_pullup
+struct os_mbuf *r_os_mbuf_pullup_(struct os_mbuf *om, uint16_t len);
+#define os_mbuf_pullup r_os_mbuf_pullup_
 
 /**
  * Removes and frees empty mbufs from the front of a chain.  If the chain
@@ -664,8 +664,8 @@ struct os_mbuf *r_os_mbuf_pullup(struct os_mbuf *om, uint16_t len);
  *
  * @return                      The head of the trimmed mbuf chain.
  */
-struct os_mbuf *r_os_mbuf_trim_front(struct os_mbuf *om);
-#define os_mbuf_trim_front r_os_mbuf_trim_front
+struct os_mbuf *r_os_mbuf_trim_front_(struct os_mbuf *om);
+#define os_mbuf_trim_front r_os_mbuf_trim_front_
 /**
  * Increases the length of an mbuf chain by inserting a gap at the specified
  * offset.  The contents of the gap are indeterminate.  If the mbuf chain
@@ -679,8 +679,8 @@ struct os_mbuf *r_os_mbuf_trim_front(struct os_mbuf *om);
  *
  * @return                      0 on success; SYS_[...] error code on failure.
  */
-int r_os_mbuf_widen(struct os_mbuf *om, uint16_t off, uint16_t len);
-#define os_mbuf_widen r_os_mbuf_widen
+int r_os_mbuf_widen_(struct os_mbuf *om, uint16_t off, uint16_t len);
+#define os_mbuf_widen r_os_mbuf_widen_
 
 
 
@@ -701,8 +701,8 @@ int r_os_mbuf_widen(struct os_mbuf *om, uint16_t off, uint16_t len);
  *
  * @return struct os_mbuf* Pointer to resulting mbuf chain
  */
-struct os_mbuf *r_os_mbuf_pack_chains(struct os_mbuf *m1, struct os_mbuf *m2);
-#define os_mbuf_pack_chains r_os_mbuf_pack_chains
+struct os_mbuf *r_os_mbuf_pack_chains_(struct os_mbuf *m1, struct os_mbuf *m2);
+#define os_mbuf_pack_chains r_os_mbuf_pack_chains_
 
 #else
 /**

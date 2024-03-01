@@ -69,7 +69,7 @@ ble_hs_mbuf_bare_pkt(void)
  *                              exhaustion.
  */
 struct os_mbuf *
-ble_hs_mbuf_acl_pkt(void)
+ble_hs_mbuf_acl_pkt_(void)
 {
 #if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + 1);

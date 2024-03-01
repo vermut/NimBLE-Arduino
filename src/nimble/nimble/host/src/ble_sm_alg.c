@@ -516,7 +516,7 @@ ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
 }
 
 int
-ble_sm_alg_gen_dhkey(const uint8_t *peer_pub_key_x, const uint8_t *peer_pub_key_y,
+ble_sm_alg_gen_dhkey_(const uint8_t *peer_pub_key_x, const uint8_t *peer_pub_key_y,
                      const uint8_t *our_priv_key, uint8_t *out_dhkey)
 {
     uint8_t dh[32];
@@ -695,7 +695,7 @@ void mbedtls_free_keypair(void)
  * priv: 32 bytes
  */
 int
-ble_sm_alg_gen_key_pair(uint8_t *pub, uint8_t *priv)
+ble_sm_alg_gen_key_pair_(uint8_t *pub, uint8_t *priv)
 {
 #if MYNEWT_VAL(BLE_SM_SC_DEBUG_KEYS)
     swap_buf(pub, ble_sm_alg_dbg_pub_key, 32);

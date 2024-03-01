@@ -388,7 +388,7 @@ ble_hs_hci_rx_ack(uint8_t *ack_ev)
 }
 
 int
-ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
+ble_hs_hci_rx_evt_(uint8_t *hci_ev, void *arg)
 {
     struct ble_hci_ev *ev = (void *) hci_ev;
     struct ble_hci_ev_command_complete *cmd_complete = (void *) ev->data;
@@ -469,7 +469,7 @@ ble_hs_hci_frag_alloc(uint16_t frag_size, void *arg)
     }
 
     /* Otherwise, fall back to msys. */
-    om = ble_hs_mbuf_acl_pkt();
+    om = ble_hs_mbuf_acl_pkt_();
     if (om != NULL) {
         return om;
     }

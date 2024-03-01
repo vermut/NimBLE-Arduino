@@ -53,7 +53,7 @@
 
 #define NIMBLE_PORT_LOG_TAG          "BLE_INIT"
 
-extern void os_msys_init(void);
+extern void os_msys_init_(void);
 
 #if CONFIG_BT_NIMBLE_ENABLED
 
@@ -66,7 +66,7 @@ static struct ble_npl_eventq g_eventq_dflt;
 static struct ble_npl_sem ble_hs_stop_sem;
 static struct ble_npl_event ble_hs_ev_stop;
 
-extern void os_msys_init(void);
+extern void os_msys_init_(void);
 extern void os_mempool_module_init(void);
 
 /**
@@ -124,7 +124,7 @@ esp_err_t esp_nimble_init(void)
     ble_npl_eventq_init(&g_eventq_dflt);
     /* Initialize the global memory pool */
     os_mempool_module_init();
-    os_msys_init();
+    os_msys_init_();
 
 #endif
     /* Initialize the host */
@@ -307,7 +307,7 @@ IRAM_ATTR nimble_port_get_dflt_eventq(void)
 
 static struct ble_npl_eventq g_eventq_dflt;
 
-extern void os_msys_init(void);
+extern void os_msys_init_(void);
 extern void os_mempool_module_init(void);
 
 void
@@ -323,7 +323,7 @@ nimble_port_init(void)
     ble_npl_eventq_init(&g_eventq_dflt);
     /* Initialize the global memory pool */
     os_mempool_module_init();
-    os_msys_init();
+    os_msys_init_();
     /* Initialize transport */
     ble_transport_init();
     /* Initialize the host */
