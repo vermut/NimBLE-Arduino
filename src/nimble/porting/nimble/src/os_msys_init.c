@@ -186,7 +186,7 @@ os_msys_buf_free(void)
 }
 #endif
 
-void os_msys_init(void)
+void os_msys_init_(void)
 {
 #if OS_MSYS_SANITY_ENABLED
     int rc;

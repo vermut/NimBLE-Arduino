@@ -41,6 +41,8 @@
 #include <string.h>
 #include <limits.h>
 
+#if !SOC_ESP_NIMBLE_CONTROLLER
+
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
@@ -1258,3 +1260,4 @@ os_mbuf_pack_chains(struct os_mbuf *m1, struct os_mbuf *m2)
 
     return m1;
 }
+#endif

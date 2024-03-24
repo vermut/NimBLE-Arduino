@@ -178,7 +178,7 @@ os_mempool_init_internal(struct os_mempool *mp, uint16_t blocks,
 
     return OS_OK;
 }
-
+#if !SOC_ESP_NIMBLE_CONTROLLER
 os_error_t
 os_mempool_init(struct os_mempool *mp, uint16_t blocks, uint32_t block_size,
                 void *membuf, const char *name)
@@ -203,7 +203,7 @@ os_mempool_ext_init(struct os_mempool_ext *mpe, uint16_t blocks,
 
     return 0;
 }
-
+#endif
 os_error_t
 os_mempool_unregister(struct os_mempool *mp)
 {
@@ -241,7 +241,7 @@ os_mempool_unregister(struct os_mempool *mp)
 
     return 0;
 }
-
+#if !SOC_ESP_NIMBLE_CONTROLLER
 os_error_t
 os_mempool_clear(struct os_mempool *mp)
 {
@@ -282,7 +282,7 @@ os_mempool_clear(struct os_mempool *mp)
 
     return OS_OK;
 }
-
+#endif
 os_error_t
 os_mempool_ext_clear(struct os_mempool_ext *mpe)
 {
@@ -292,7 +292,7 @@ os_mempool_ext_clear(struct os_mempool_ext *mpe)
 
     return os_mempool_clear(&mpe->mpe_mp);
 }
-
+#if !SOC_ESP_NIMBLE_CONTROLLER
 bool
 os_mempool_is_sane(const struct os_mempool *mp)
 {
@@ -453,7 +453,7 @@ done:
     os_trace_api_ret_u32(OS_TRACE_ID_MEMBLOCK_PUT, (uint32_t)ret);
     return ret;
 }
-
+#endif
 struct os_mempool *
 os_mempool_info_get_next(struct os_mempool *mp, struct os_mempool_info *omi)
 {

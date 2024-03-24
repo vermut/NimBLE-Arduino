@@ -117,16 +117,21 @@ esp_err_t esp_nimble_init(void)
     ble_transport_init();
 #if MYNEWT_VAL(BLE_QUEUE_CONG_CHECK)
     ble_adv_list_init();
-#endif
-#endif
+#endif // MYNEWT_VAL(BLE_QUEUE_CONG_CHECK)
+#endif // CONFIG_BT_CONTROLLER_ENABLED
+#endif // !SOC_ESP_NIMBLE_CONTROLLER || !CONFIG_BT_CONTROLLER_ENABLED
 
     /* Initialize default event queue */
+    /* Included for Arduino since the default event queue is not initialized
+    * in the Arduino core when bludroid is used.
+    */
     ble_npl_eventq_init(&g_eventq_dflt);
+#if !SOC_ESP_NIMBLE_CONTROLLER || !CONFIG_BT_CONTROLLER_ENABLED
     /* Initialize the global memory pool */
     os_mempool_module_init();
     os_msys_init();
 
-#endif
+#endif // !SOC_ESP_NIMBLE_CONTROLLER || !CONFIG_BT_CONTROLLER_ENABLED
     /* Initialize the host */
     ble_transport_hs_init();
 #if CONFIG_BT_CONTROLLER_DISABLED && CONFIG_BT_NIMBLE_TRANSPORT_UART

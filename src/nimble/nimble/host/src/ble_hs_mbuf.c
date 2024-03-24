@@ -25,7 +25,7 @@
  * Allocates an mbuf for use by the nimble host.
  */
 static struct os_mbuf *
-ble_hs_mbuf_gen_pkt(uint16_t leading_space)
+ble_hs_mbuf_gen_pkt_(uint16_t leading_space)
 {
     struct os_mbuf *om;
     int rc;
@@ -59,7 +59,7 @@ ble_hs_mbuf_gen_pkt(uint16_t leading_space)
 struct os_mbuf *
 ble_hs_mbuf_bare_pkt(void)
 {
-    return ble_hs_mbuf_gen_pkt(0);
+    return ble_hs_mbuf_gen_pkt_(0);
 }
 
 /**
@@ -69,12 +69,12 @@ ble_hs_mbuf_bare_pkt(void)
  *                              exhaustion.
  */
 struct os_mbuf *
-ble_hs_mbuf_acl_pkt(void)
+ble_hs_mbuf_acl_pkt_(void)
 {
 #if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
-    return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + 1);
+    return ble_hs_mbuf_gen_pkt_(BLE_HCI_DATA_HDR_SZ + 1);
 #else
-    return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
+    return ble_hs_mbuf_gen_pkt_(BLE_HCI_DATA_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
 #endif
 }
 
@@ -91,9 +91,9 @@ struct os_mbuf *
 ble_hs_mbuf_l2cap_pkt(void)
 {
 #if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
-    return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_L2CAP_HDR_SZ + 1);
+    return ble_hs_mbuf_gen_pkt_(BLE_HCI_DATA_HDR_SZ + BLE_L2CAP_HDR_SZ + 1);
 #else
-    return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_L2CAP_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
+    return ble_hs_mbuf_gen_pkt_(BLE_HCI_DATA_HDR_SZ + BLE_L2CAP_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
 #endif
 }
 
@@ -103,7 +103,7 @@ ble_hs_mbuf_att_pkt(void)
     /* Prepare write request and response are the larget ATT commands which
      * contain attribute data.
      */
-     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ +
+     return ble_hs_mbuf_gen_pkt_(BLE_HCI_DATA_HDR_SZ +
                                 BLE_L2CAP_HDR_SZ +
                                 BLE_ATT_PREP_WRITE_CMD_BASE_SZ);
 }

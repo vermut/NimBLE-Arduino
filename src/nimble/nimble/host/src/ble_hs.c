@@ -32,6 +32,11 @@
 
 #include "../include/host/ble_hs_pvcy.h"
 
+#if SOC_ESP_NIMBLE_CONTROLLER
+int ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg);
+int ble_hs_rx_data(struct os_mbuf *om, void *arg);
+#endif
+
 #define BLE_HS_HCI_EVT_COUNT    MYNEWT_VAL(BLE_TRANSPORT_EVT_COUNT)
 
 static void ble_hs_event_rx_hci_ev(struct ble_npl_event *ev);
@@ -698,7 +703,7 @@ ble_hs_start(void)
  * @return                      0 on success; nonzero on failure.
  */
 static int
-ble_hs_rx_data(struct os_mbuf *om, void *arg)
+ble_hs_rx_data_(struct os_mbuf *om, void *arg)
 {
     int rc;
 
@@ -818,8 +823,15 @@ ble_hs_init(void)
 #endif
 
 #if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
-    /* Configure the HCI transport to communicate with a host. */
     ble_hci_trans_cfg_hs(ble_hs_hci_rx_evt, NULL, ble_hs_rx_data, NULL);
+#else
+    /* Configure the HCI transport to communicate with a host. */
+    ble_hci_trans_cfg_hs(ble_hs_hci_rx_evt_, NULL, ble_hs_rx_data_, NULL);
+#endif
+
+#if BLE_MONITOR
+    rc = ble_monitor_init();
+    SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 
     /* Enqueue the start event to the default event queue.  Using the default

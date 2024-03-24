@@ -17,6 +17,11 @@
  * under the License.
  */
 
+#ifdef ESP_PLATFORM
+#include "soc/soc_caps.h"
+#ifndef SOC_ESP_NIMBLE_CONTROLLER
+
+
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 
 #if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
@@ -41,8 +46,6 @@
 
 #ifdef ESP_PLATFORM
 #include "esp_log.h"
-
-#include "soc/soc_caps.h"
 
 portMUX_TYPE ble_port_mutex = portMUX_INITIALIZER_UNLOCKED;
 
@@ -1984,3 +1987,5 @@ npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms)
 }
 
 #endif // CONFIG_NIMBLE_STACK_USE_MEM_POOLS
+#endif
+#endif

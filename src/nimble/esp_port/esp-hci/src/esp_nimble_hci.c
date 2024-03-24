@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifdef ESP_PLATFORM
+#if defined (ESP_PLATFORM)
+#include "soc/soc_caps.h"
+#if !(SOC_ESP_NIMBLE_CONTROLLER)
 
 #include <assert.h>
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
@@ -352,4 +354,5 @@ esp_err_t esp_nimble_hci_deinit(void)
     return ESP_OK;
 }
 
-#endif
+#endif /* !SOC_ESP_NIMBLE_CONTROLLER */
+#endif /* ESP_PLATFORM */
