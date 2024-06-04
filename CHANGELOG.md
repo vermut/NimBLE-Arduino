@@ -3,12 +3,44 @@
 All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
+## Fixed
+- `NimBLEDevice::getPower` return value corrected to return `-3` when the power level is set to `ESP_PWR_LVL_N3`.
+- Fixed building with esp-idf version 5.x.
+- Fixed pairing failing when the process was started by the peer first.
+- `NimBLEService::getHandle` will now fetch the handle from the stack if not valid to avoid returning an invalid value.
+- `NimBLEHIDDevice::pnp` will now set the data correctly.
+- Fix CONFIG_BT_NIMBLE_NVS_PERSIST value not being used.
+
 ### Changed
 - NimBLESecurity class removed.
+- All functions that take a time input parameter now expect the value to be in milliseconds instead of seconds.
+- `NimBLEClientCallbacks::onDisconnect` now takes an additional `int reason` parameter to let the application know why the disconnect occurred.
+- `NimBLERemoteCharacteristic::registerForNotify` Has been removed.
+- `NimBLERemoteCharacteristic::readUInt16` Has been removed.
+- `NimBLERemoteCharacteristic::readUInt32` Has been removed.
+- `NimBLERemoteCharacteristic::readUInt8` Has been removed.
+- `NimBLERemoteCharacteristic::readFloat` Has been removed.
+- `NimBLECharacteristicCallbacks::onStatus` No longer takes a `status` parameter, refer to the return code for success/failure.
+- All connection oriented callbacks now receive a reference to `NimBLEConnInfo`, the `ble_gap_conn_desc` has also been replace with `NimBLEConnInfo` in the functions that received it.
+- `NimBLEAdvertisedDeviceCallbacks` Has been replaced by `NimBLEScanCallbacks` which contains the following methods: `onResult`, `onScanEnd`, and `onDiscovered`
+- - `NimBLEScanCallbacks::onResult`, functions the same as the old `NimBLEAdvertisedDeviceCallbacks::onResult`
+- - `NimBLEScanCallbacks::onScanEnd`, replaces the scanEnded callback passed to `NimBLEScan::start`
+- - `NimBLEScanCallbacks::onDiscovered`, This is called immediately when a device is first scanned, before any scan response data is available.
+- The callback parameter for `NimBLEScan::start` has been removed and the blocking overload of `NimBLEScan::start` has been replaced by an overload of `NimBLEScan::getResults` with the same parameters.
+- Added optional `conn_handle` parameter to `NimBLECharacteristic::notify` to allow for sending notifications to specific clients.
+- Added optional `NimBLEAddress` parameter to `NimBLEAdvertising::start` to allow for directed advertising to a peer.
+- `NimBLEAdvertisedDevice::getManufacturerData` now takes an optional index parameter for use in the case of multiple manufacturer data fields.
+- `NimBLEAdvertising::start` advertising complete callback is now defined as std::function to allow for using std::bind for callback functions.
 
 ### Added
 - `NimBLEDevice::setDeviceName` to change the device name after initialization.
 - `NimBLEHIDDevice::batteryLevel` returns the HID device battery level characteristic.
+- `NimBLEAdvertisedDevice::getAdvFlags` returns the advertisement flags of the advertiser.
+- `NimBLEAdvertisedDevice::getPayloadByType` Generic use function that returns the data from the advertisement with the specified type.
+- `NimBLEAdvertisedDevice::haveType` Generic use function that returns true if the advertisement data contains a field with the specified type.
+- Support for esp32c6 and esp32c2.
+- `NimBLEClient::setConnection` to be able to set a clients connection parameters, useful when a server wants to read data from the connected client.
+- `NimBLEClient::clearConnection` compliments `setConnection` to allow the client instance to be reused.
 
 ## [1.4.1] - 2022-10-23
 
