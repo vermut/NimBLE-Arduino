@@ -286,6 +286,15 @@ os_error_t r_os_memblock_put_from_cb(struct os_mempool *mp, void *block_addr);
 os_error_t r_os_memblock_put(struct os_mempool *mp, void *block_addr);
 #define os_memblock_put r_os_memblock_put
 
+/**
+ * Clears an extended memory pool.
+ *
+ * @param mpe            The extended memory pool to clear.
+ *
+ * @return os_error_t
+ */
+os_error_t os_mempool_ext_clear(struct os_mempool_ext *mpe);
+
 #else
 /**
  * Initialize a memory pool.

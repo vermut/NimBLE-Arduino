@@ -375,7 +375,7 @@ ble_hs_hci_rx_ack(uint8_t *ack_ev)
     ble_hs_hci_ack = (struct ble_hci_ev *) ack_ev;
     ble_npl_sem_release(&ble_hs_hci_sem);
 }
-
+#if 0
 int
 ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
 {
@@ -406,7 +406,7 @@ ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
 
     return 0;
 }
-
+#endif
 #if !(SOC_ESP_NIMBLE_CONTROLLER)
 /**
  * Calculates the largest ACL payload that the controller can accept.

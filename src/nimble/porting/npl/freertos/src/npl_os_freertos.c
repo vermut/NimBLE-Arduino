@@ -1409,6 +1409,7 @@ npl_freertos_hw_set_isr(int irqn, void (*addr)(void))
 }
 #endif
 
+#if 0
 struct ble_npl_event *
 npl_freertos_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo)
 {
@@ -1868,6 +1869,7 @@ npl_freertos_callout_get_ticks(struct ble_npl_callout *co)
     return xTimerGetExpiryTime(co->handle);
 #endif
 }
+#endif
 
 ble_npl_time_t
 npl_freertos_callout_remaining_ticks(struct ble_npl_callout *co,
@@ -1907,7 +1909,7 @@ npl_freertos_callout_remaining_ticks(struct ble_npl_callout *co,
 
     return rt;
 }
-
+#if 0
 ble_npl_error_t
 npl_freertos_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks)
 {
@@ -1937,5 +1939,5 @@ npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms)
 
     return 0;
 }
-
+#endif
 #endif // CONFIG_NIMBLE_STACK_USE_MEM_POOLS

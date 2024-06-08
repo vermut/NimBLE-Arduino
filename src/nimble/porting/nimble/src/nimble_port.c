@@ -43,7 +43,7 @@
 
 #if SOC_ESP_NIMBLE_CONTROLLER
 #if CONFIG_SW_COEXIST_ENABLE
-#include "esp_coexist_internal.h"
+//#include "esp_coexist_internal.h"
 #endif
 #endif
 
@@ -117,6 +117,8 @@ esp_err_t esp_nimble_init(void)
 
     os_msys_init();
 
+#else
+    ble_npl_eventq_init(&g_eventq_dflt);
 #endif
 
     /* Initialize the host */
