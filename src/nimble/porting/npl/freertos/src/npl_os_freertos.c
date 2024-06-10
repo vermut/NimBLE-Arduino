@@ -896,10 +896,9 @@ npl_freertos_callout_deinit(struct ble_npl_callout *co)
 
     if(esp_timer_delete(callout->handle))
         ESP_LOGW(TAG, "Timer not deleted");
-
 #else
-
     xTimerDelete(callout->handle, portMAX_DELAY);
+#endif
 
 #if OS_MEM_ALLOC
     os_memblock_put(&ble_freertos_co_pool,callout);
@@ -907,7 +906,6 @@ npl_freertos_callout_deinit(struct ble_npl_callout *co)
     free((void *)callout);
 #endif
 
-#endif
     co->co = NULL;
     memset(co, 0, sizeof(struct ble_npl_callout));
 }

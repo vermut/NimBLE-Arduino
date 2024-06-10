@@ -134,13 +134,31 @@ struct ble_gap_connect_reattempt_ctxt {
     struct ble_gap_conn_params conn_params;
     ble_gap_event_fn *cb;
     void *cb_arg;
-};
+}ble_conn_reattempt;
 
-static struct ble_gap_connect_reattempt_ctxt ble_conn_reattempt[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
-#if MYNEWT_VAL(BLE_ROLE_CENTRAL)
-static uint16_t reattempt_idx;
+struct ble_gap_adv_reattempt_ctxt {
+     uint8_t type;
+
+     struct ble_hs_adv_fields fields;
+     uint8_t own_addr_type;
+     ble_addr_t direct_addr;
+     uint8_t direct_addr_present:1 ;
+     int32_t duration_ms;
+     struct ble_gap_adv_params adv_params;
+
+#if MYNEWT_VAL(BLE_EXT_ADV)
+     uint8_t instance;
+     struct ble_gap_ext_adv_params params;
+     int8_t selected_tx_power;
+     uint8_t selected_tx_power_present:1;
+     struct os_mbuf *data;
+     int duration;
+     int max_events;
 #endif
-static bool conn_cookie_enabled;
+
+     ble_gap_event_fn *cb;
+     void *cb_arg;
+}ble_adv_reattempt;
 #endif
 
 
@@ -764,6 +782,44 @@ ble_gap_set_prefered_le_phy(uint16_t conn_handle, uint8_t tx_phys_mask,
 #endif
 }
 
+int ble_gap_get_local_used_addr(ble_addr_t *addr)
+{
+    uint8_t own_addr_type = 0;
+    const uint8_t *out_id_addr;
+    int rc;
+
+    if (addr == NULL) {
+        return BLE_HS_EINVAL;
+    }
+
+    own_addr_type = ble_gap_slave[0].our_addr_type;
+
+    rc = ble_hs_id_addr(own_addr_type, &out_id_addr,NULL);
+
+    if (rc == 0) {
+        addr->type = own_addr_type;
+        memcpy(addr->val, out_id_addr, BLE_DEV_ADDR_LEN);
+    }
+
+    return rc;
+}
+
+uint8_t* ble_resolve_adv_data(const uint8_t *adv_data, uint8_t adv_type, uint8_t adv_data_len , uint8_t * length)
+{
+    int rc = 0;
+    const struct ble_hs_adv_field *fields;
+    const uint8_t *data;
+
+    rc = ble_hs_adv_find_field(adv_type, adv_data, adv_data_len, &fields); /*Fill adv field*/
+
+    if (rc == 0) {
+        *length = fields->length -1 ; /* minus length of type*/
+        data  = fields->value;  /* Type specific adv data*/
+        return (uint8_t*)data;
+    }
+
+    return NULL;
+}
 /*****************************************************************************
  * $misc                                                                     *
  *****************************************************************************/
@@ -981,27 +1037,12 @@ ble_gap_master_connect_cancelled(void)
 static void
 ble_gap_update_notify(uint16_t conn_handle, int status);
 
-static int
-ble_gap_find_retry_conn_param(const struct ble_gap_conn_desc *conn_desc)
-{
-    int i;
-
-    for(i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); i++) {
-        if (ble_conn_reattempt[i].peer_addr_present == 1 && memcmp(&ble_conn_reattempt[i].peer_addr, &conn_desc->peer_ota_addr, sizeof(ble_addr_t)) == 0) {
-            return i;
-        }
-    }
-    /* No matching entry found. Return invalid index */
-    return MYNEWT_VAL(BLE_MAX_CONNECTIONS);
-}
-
 int
 ble_gap_master_connect_reattempt(uint16_t conn_handle)
 {
     struct ble_gap_snapshot snap;
     struct ble_gap_conn_desc conn;
     struct ble_gap_update_entry *entry;
-    int idx;
     int rc = BLE_HS_EUNKNOWN;
 
     snap.desc = &conn;
@@ -1011,14 +1052,6 @@ ble_gap_master_connect_reattempt(uint16_t conn_handle)
     }
 
     if (conn.role == BLE_GAP_ROLE_MASTER) {
-        idx = ble_gap_find_retry_conn_param(&conn);
-        if (idx >= MYNEWT_VAL(BLE_MAX_CONNECTIONS)) {
-            return BLE_HS_EINVAL;
-        }
-
-        /* XXX Connection state in host needs to be removed and cleaned
-         * up to validate the connection when re-attempting. */
-
         /* If there was a connection update in progress, indicate to the
          * application that it did not complete.
          */
@@ -1042,14 +1075,11 @@ ble_gap_master_connect_reattempt(uint16_t conn_handle)
             return rc;
         }
 
-        /* Utilize cookie to get the index updated correctly for re-attempt */
-        conn_cookie_enabled = true;
-
-        rc = ble_gap_connect(ble_conn_reattempt[idx].own_addr_type,
-                             (ble_conn_reattempt[idx].peer_addr_present == 1 ? &ble_conn_reattempt[idx].peer_addr : NULL),
-                             ble_conn_reattempt[idx].duration_ms,
-                             &ble_conn_reattempt[idx].conn_params,
-                             ble_conn_reattempt[idx].cb,
+        rc = ble_gap_connect(ble_conn_reattempt.own_addr_type,
+                             (ble_conn_reattempt.peer_addr_present == 1 ? &ble_conn_reattempt.peer_addr : NULL),
+                             ble_conn_reattempt.duration_ms,
+                             &ble_conn_reattempt.conn_params,
+                             ble_conn_reattempt.cb,
                              &conn);
         if (rc != 0) {
             return rc;
@@ -1071,7 +1101,62 @@ void ble_gap_reattempt_count(uint16_t conn_handle, uint8_t count)
     event.reattempt_cnt.count = count;
     event.reattempt_cnt.conn_handle = le16toh(conn_handle);
 
+    ble_gap_event_listener_call(&event);
     ble_gap_call_conn_event_cb(&event, handle);
+}
+
+int ble_gap_slave_adv_reattempt(void)
+{
+    int rc = 0;
+
+    switch (ble_adv_reattempt.type) {
+	case 0:
+	    ble_gap_adv_stop();
+
+	    rc = ble_gap_adv_set_fields(&ble_adv_reattempt.fields);
+	    if (rc != 0) {
+		return rc;
+	    }
+
+	    rc = ble_gap_adv_start(ble_adv_reattempt.own_addr_type,
+		    (ble_adv_reattempt.direct_addr_present == 1 ? &ble_adv_reattempt.direct_addr: NULL),
+		    ble_adv_reattempt.duration_ms, &ble_adv_reattempt.adv_params,
+		    ble_adv_reattempt.cb, ble_adv_reattempt.cb_arg);
+	    if (rc != 0) {
+		return rc;
+	    }
+	    break;
+
+	case 1:
+#if MYNEWT_VAL(BLE_EXT_ADV)
+	    ble_gap_ext_adv_stop(ble_adv_reattempt.instance);
+
+	    rc = ble_gap_ext_adv_configure(ble_adv_reattempt.instance, &ble_adv_reattempt.params,
+		    (ble_adv_reattempt.selected_tx_power_present == 1 ? &ble_adv_reattempt.selected_tx_power : NULL),
+		    ble_adv_reattempt.cb, ble_adv_reattempt.cb_arg);
+	    if (rc != 0) {
+		return rc;
+	    }
+
+	    rc = ble_gap_ext_adv_set_data(ble_adv_reattempt.instance, ble_adv_reattempt.data);
+
+	    if (rc != 0) {
+                return rc;
+            }
+
+	    rc = ble_gap_ext_adv_start(ble_adv_reattempt.instance, ble_adv_reattempt.duration,
+		    ble_adv_reattempt.max_events);
+	    if (rc != 0)
+		return rc;
+#endif
+	    break;
+
+	default:
+	    break;
+    }
+
+    return rc;
+
 }
 #endif
 
@@ -1695,6 +1780,18 @@ ble_gap_rx_adv_set_terminated(const struct ble_hci_ev_le_subev_adv_set_terminate
     ble_gap_adv_finished(ev->adv_handle, reason, conn_handle, ev->num_events);
 }
 
+static void
+ble_gap_slave_get_cb(uint8_t instance,
+                     ble_gap_event_fn **out_cb, void **out_cb_arg)
+{
+    ble_hs_lock();
+
+    *out_cb = ble_gap_slave[instance].cb;
+    *out_cb_arg = ble_gap_slave[instance].cb_arg;
+
+    ble_hs_unlock();
+}
+
 void
 ble_gap_rx_scan_req_rcvd(const struct ble_hci_ev_le_subev_scan_req_rcvd *ev)
 {
@@ -1702,7 +1799,7 @@ ble_gap_rx_scan_req_rcvd(const struct ble_hci_ev_le_subev_scan_req_rcvd *ev)
     ble_gap_event_fn *cb;
     void *cb_arg;
 
-    ble_gap_slave_extract_cb(ev->adv_handle, &cb, &cb_arg);
+    ble_gap_slave_get_cb(ev->adv_handle, &cb, &cb_arg);
     if (cb != NULL) {
         memset(&event, 0, sizeof event);
         event.type = BLE_GAP_EVENT_SCAN_REQ_RCVD;
@@ -2230,6 +2327,25 @@ ble_gap_rx_phy_update_complete(const struct ble_hci_ev_le_subev_phy_update_compl
     event.phy_updated.conn_handle = conn_handle;
     event.phy_updated.tx_phy = ev->tx_phy;
     event.phy_updated.rx_phy = ev->rx_phy;
+
+    ble_gap_event_listener_call(&event);
+    ble_gap_call_conn_event_cb(&event, conn_handle);
+#endif
+}
+
+void
+ble_gap_rx_data_len_change(const struct ble_hci_ev_le_subev_data_len_chg *ev)
+{
+#if NIMBLE_BLE_CONNECT
+    struct ble_gap_event event;
+    uint16_t conn_handle = le16toh(ev->conn_handle);
+
+    memset(&event, 0, sizeof event);
+    event.type = BLE_GAP_EVENT_DATA_LEN_CHG;
+    event.data_len_chg.max_tx_octets = le16toh(ev->max_tx_octets);
+    event.data_len_chg.max_rx_octets = le16toh(ev->max_rx_octets);
+    event.data_len_chg.max_tx_time = le16toh(ev->max_tx_time);
+    event.data_len_chg.max_rx_time = le16toh(ev->max_rx_time);
 
     ble_gap_event_listener_call(&event);
     ble_gap_call_conn_event_cb(&event, conn_handle);
@@ -2831,6 +2947,23 @@ ble_gap_adv_start(uint8_t own_addr_type, const ble_addr_t *direct_addr,
         return BLE_HS_EDISABLED;
     }
 
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+    ble_adv_reattempt.type = 0;
+    ble_adv_reattempt.own_addr_type = own_addr_type;
+
+    if (direct_addr) {
+        memcpy(&ble_adv_reattempt.direct_addr, direct_addr, sizeof(ble_addr_t));
+        ble_adv_reattempt.direct_addr_present = 1;
+    } else {
+        ble_adv_reattempt.direct_addr_present = 0;
+    }
+
+    ble_adv_reattempt.duration_ms = duration_ms;
+    memcpy(&ble_adv_reattempt.adv_params , adv_params, sizeof(struct ble_gap_adv_params));
+    ble_adv_reattempt.cb = cb;
+    ble_adv_reattempt.cb_arg = cb_arg;
+#endif
+
     ble_hs_lock();
 
     rc = ble_gap_adv_validate(own_addr_type, direct_addr, adv_params);
@@ -2971,6 +3104,9 @@ ble_gap_adv_set_fields(const struct ble_hs_adv_fields *adv_fields)
     if (!ble_hs_is_enabled()) {
 	return BLE_HS_EDISABLED;
     }
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+    memcpy(&ble_adv_reattempt.fields, adv_fields, sizeof( struct ble_hs_adv_fields));
+#endif
 
     rc = ble_hs_adv_set_fields(adv_fields, buf, &buf_sz, sizeof buf);
     if (rc != 0) {
@@ -3203,6 +3339,23 @@ ble_gap_ext_adv_configure(uint8_t instance,
         return rc;
     }
 
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+    ble_adv_reattempt.instance = instance;
+
+    memcpy(&ble_adv_reattempt.params, params, sizeof(struct ble_gap_ext_adv_params));
+
+    if (selected_tx_power) {
+        ble_adv_reattempt.selected_tx_power = *selected_tx_power;
+        ble_adv_reattempt.selected_tx_power_present = 1 ;
+    } else {
+        ble_adv_reattempt.selected_tx_power_present = 0 ;
+    }
+
+    ble_adv_reattempt.cb = cb;
+
+    ble_adv_reattempt.cb_arg = cb_arg;
+#endif
+
     ble_hs_lock();
 
     if (ble_gap_adv_active_instance(instance)) {
@@ -3319,6 +3472,13 @@ ble_gap_ext_adv_start(uint8_t instance, int duration, int max_events)
     if (!ble_hs_is_enabled()) {
        return BLE_HS_EDISABLED;
     }
+
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+     ble_adv_reattempt.type = 1;
+     ble_adv_reattempt.instance = instance;
+     ble_adv_reattempt.duration = duration;
+     ble_adv_reattempt.max_events = max_events;
+#endif
 
     ble_hs_lock();
     if (!ble_gap_slave[instance].configured) {
@@ -3606,6 +3766,23 @@ ble_gap_ext_adv_set_data(uint8_t instance, struct os_mbuf *data)
        goto done;
     }
 
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+    uint16_t len = OS_MBUF_PKTLEN(data);
+    ble_adv_reattempt.type = 1;
+    ble_adv_reattempt.instance = instance;
+
+    // Allocate if NULL
+    if (ble_adv_reattempt.data == NULL) {
+        ble_adv_reattempt.data = os_msys_get_pkthdr(len , 0);
+    }
+
+    if (ble_adv_reattempt.data && (ble_adv_reattempt.data != data)) {
+        os_mbuf_adj(ble_adv_reattempt.data, len);
+        rc = os_mbuf_appendfrom(ble_adv_reattempt.data, data, 0, len);
+        assert (rc == 0);
+    }
+#endif
+
     ble_hs_lock();
     rc = ble_gap_ext_adv_set_data_validate(instance, data);
     if (rc != 0) {
@@ -3618,7 +3795,15 @@ ble_gap_ext_adv_set_data(uint8_t instance, struct os_mbuf *data)
     ble_hs_unlock();
 
 done:
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+    if (ble_adv_reattempt.data != data) {
+       os_mbuf_free_chain(data);
+       data = NULL;
+    }
+#else
     os_mbuf_free_chain(data);
+    data = NULL;
+#endif
     return rc;
 }
 
@@ -5626,51 +5811,38 @@ ble_gap_ext_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
     ble_gap_master.op = BLE_GAP_OP_M_CONN;
 
 #if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
-    /* ble_gap_connect_reattempt save the connection parameters */
-    if ((cb_arg != NULL) && conn_cookie_enabled) {
-        struct ble_gap_conn_desc *conn_desc =  cb_arg;
-        struct ble_gap_conn_desc *curr_conn_desc=NULL;
-        /* reattempt_idx is set to that index where corresponding conn_handle entry was made  */
-        for (int i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); i++) {
-             curr_conn_desc = ble_conn_reattempt[i].cb_arg;
-             if (curr_conn_desc && (conn_desc->conn_handle == curr_conn_desc->conn_handle)) {
-                 reattempt_idx = i;
-                 break;
-             }
-        }
-        /* Reset cookie_enabled flag, it will be set again by reattempt call */
-        conn_cookie_enabled = false;
+    ble_conn_reattempt.own_addr_type = own_addr_type;
+
+    if (peer_addr != NULL) {
+        ble_conn_reattempt.peer_addr_present = 1;
+        memcpy(&ble_conn_reattempt.peer_addr, peer_addr, sizeof(ble_addr_t));
+    } else {
+        ble_conn_reattempt.peer_addr_present = 0;
+        memset(&ble_conn_reattempt.peer_addr, 0, sizeof(ble_addr_t));
     }
 
-    ble_conn_reattempt[reattempt_idx].own_addr_type = own_addr_type;
-    memcpy(&ble_conn_reattempt[reattempt_idx].peer_addr, peer_addr,
-           sizeof(ble_addr_t));
-    ble_conn_reattempt[reattempt_idx].duration_ms = duration_ms;
+    ble_conn_reattempt.duration_ms = duration_ms;
 
     if (phy_mask & BLE_GAP_LE_PHY_1M_MASK) {
-        memcpy(&ble_conn_reattempt[reattempt_idx].conn_params,
+        memcpy(&ble_conn_reattempt.conn_params,
                phy_1m_conn_params,
                sizeof(struct ble_gap_conn_params));
     }
 
     if (phy_mask & BLE_GAP_LE_PHY_2M_MASK) {
-         memcpy(&ble_conn_reattempt[reattempt_idx].conn_params,
+         memcpy(&ble_conn_reattempt.conn_params,
                phy_2m_conn_params,
                sizeof(struct ble_gap_conn_params));
     }
 
     if (phy_mask & BLE_GAP_LE_PHY_CODED_MASK) {
-        memcpy(&ble_conn_reattempt[reattempt_idx].conn_params,
+        memcpy(&ble_conn_reattempt.conn_params,
                phy_coded_conn_params,
                sizeof(struct ble_gap_conn_params));
     }
 
-    ble_conn_reattempt[reattempt_idx].cb = cb;
-    ble_conn_reattempt[reattempt_idx].cb_arg = cb_arg;
-    /* reattempt_idx need to be within limits. This may end up being unnecessary
-     * operation. However, it is better to be sure as it can get tricky with
-     * multiple connections and client + server roles XXX*/
-    reattempt_idx = (reattempt_idx + 1) % MYNEWT_VAL(BLE_MAX_CONNECTIONS);
+    ble_conn_reattempt.cb = cb;
+    ble_conn_reattempt.cb_arg = cb_arg;
 #endif
 
 
@@ -5812,56 +5984,39 @@ ble_gap_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
         memcpy(bhc_peer_addr.val, peer_addr->val, BLE_DEV_ADDR_LEN);
 
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+    if (ble_host_rpa_enabled())
+    {
         struct ble_hs_resolv_entry *rl = NULL;
         rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
 
-        if (rl != NULL) {
+        if (rl != NULL && rl->rl_isrpa) {
             memcpy(bhc_peer_addr.val, rl->rl_peer_rpa, BLE_DEV_ADDR_LEN);
             bhc_peer_addr.type = rl->rl_addr_type;
         }
+    }
 #endif
     } else {
         memset(&bhc_peer_addr, 0, sizeof bhc_peer_addr);
     }
 
 #if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
-    /* ble_gap_connect_reattempt save the connection parameters */
-    if ((cb_arg != NULL) && conn_cookie_enabled) {
-        struct ble_gap_conn_desc *conn_desc =  cb_arg;
-        struct ble_gap_conn_desc *curr_conn_desc=NULL;
-        /* reattempt_idx is set to that index where corresponding conn_handle entry was made  */
-        for (int i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); i++) {
-             curr_conn_desc = ble_conn_reattempt[i].cb_arg;
-             if (curr_conn_desc && (conn_desc->conn_handle == curr_conn_desc->conn_handle)) {
-                 reattempt_idx = i;
-                 break;
-             }
-        }
-        /* Reset cookie_enabled flag, it will be set again by reattempt call */
-        conn_cookie_enabled = false;
-    }
-
-    ble_conn_reattempt[reattempt_idx].own_addr_type = own_addr_type;
+    ble_conn_reattempt.own_addr_type = own_addr_type;
     if (peer_addr != NULL) {
-        ble_conn_reattempt[reattempt_idx].peer_addr_present = 1;
-        memcpy(&ble_conn_reattempt[reattempt_idx].peer_addr, &bhc_peer_addr,
+        ble_conn_reattempt.peer_addr_present = 1;
+        memcpy(&ble_conn_reattempt.peer_addr, &bhc_peer_addr,
                sizeof(ble_addr_t));
     } else {
-        ble_conn_reattempt[reattempt_idx].peer_addr_present = 0;
-        memset(&ble_conn_reattempt[reattempt_idx].peer_addr, 0,
+        ble_conn_reattempt.peer_addr_present = 0;
+        memset(&ble_conn_reattempt.peer_addr, 0,
                sizeof(ble_addr_t));
     }
-    ble_conn_reattempt[reattempt_idx].duration_ms = duration_ms;
-    memcpy(&ble_conn_reattempt[reattempt_idx].conn_params,
+
+    ble_conn_reattempt.duration_ms = duration_ms;
+    memcpy(&ble_conn_reattempt.conn_params,
            conn_params,
            sizeof(struct ble_gap_conn_params));
-    ble_conn_reattempt[reattempt_idx].cb = cb;
-    ble_conn_reattempt[reattempt_idx].cb_arg = cb_arg;
-
-    /* reattempt_idx need to be within limits. This may end up being unnecessary
-     * operation. However, it is better to be sure as it can get tricky with
-     * multiple connections and client + server roles XXX*/
-    reattempt_idx = (reattempt_idx + 1) % MYNEWT_VAL(BLE_MAX_CONNECTIONS);
+    ble_conn_reattempt.cb = cb;
+    ble_conn_reattempt.cb_arg = cb_arg;
 #endif
 
     if (peer_addr != NULL) {
@@ -6746,15 +6901,15 @@ ble_gap_unpair(const ble_addr_t *peer_addr)
             irk_rc = ble_hs_pvcy_remove_entry(key.sec.peer_addr.type,
                                 key.sec.peer_addr.val);
             if (irk_rc != 0) {
-                BLE_HS_LOG(ERROR, "Error while removing IRK\n");
+                BLE_HS_LOG(ERROR, "Error while removing IRK , rc = %x\n",irk_rc);
             }
         }
 
-        if (value.sec.ltk_present || value.sec.irk_present) {
+        if (value.sec.ltk_present || value.sec.irk_present || value.sec.csrk_present) {
             // Delete the Peer record from store as LTK is present
             ltk_rc = ble_store_util_delete_peer(&key.sec.peer_addr);
             if (ltk_rc != 0) {
-                BLE_HS_LOG(ERROR, "Error while removing LTK\n");
+                BLE_HS_LOG(ERROR, "Error while removing LTK , rc = %x\n",ltk_rc);
             }
         }
     }
@@ -6764,7 +6919,7 @@ ble_gap_unpair(const ble_addr_t *peer_addr)
             ble_store_util_delete_peer(&key.sec.peer_addr);
          }
          else {
-              BLE_HS_LOG(ERROR,"No record found for the given address in ble store");
+              BLE_HS_LOG(ERROR,"No record found for the given address in ble store , rc = %x\n",rc);
               return rc;
          }
 

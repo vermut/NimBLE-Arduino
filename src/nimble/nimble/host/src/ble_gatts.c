@@ -590,8 +590,9 @@ ble_gatts_calculate_hash(uint8_t *out_hash_key)
     int size;
     int rc;
     uint8_t *buf;
-    uint8_t key[16] = {0};
+    uint8_t key[16];
 
+    memset(key, 0, sizeof(key));
     /* data with all zeroes */
     rc = ble_att_get_database_size(&size);
     if(rc != 0) {
@@ -761,7 +762,7 @@ ble_gatts_cpfd_is_sane(const struct ble_gatt_cpfd *cpfd)
         return 0;
     }
 
-    if ((cpfd->namespace_ == BLE_GATT_CHR_NAMESPACE_BT_SIG) && (cpfd->description > 0x0110)) {
+    if ((cpfd->name_space == BLE_GATT_CHR_NAMESPACE_BT_SIG) && (cpfd->description > 0x0110)) {
         return 0;
     }
 
@@ -1058,7 +1059,7 @@ ble_gatts_cpfd_access(uint16_t conn_handle, uint16_t attr_handle,
     rc += os_mbuf_append(*om, &(cpfd->format), sizeof(cpfd->format));
     rc += os_mbuf_append(*om, &(cpfd->exponent), sizeof(cpfd->exponent));
     rc += os_mbuf_append(*om, &(cpfd->unit), sizeof(cpfd->unit));
-    rc += os_mbuf_append(*om, &(cpfd->namespace_), sizeof(cpfd->namespace_));
+    rc += os_mbuf_append(*om, &(cpfd->name_space), sizeof(cpfd->name_space));
     rc += os_mbuf_append(*om, &(cpfd->description), sizeof(cpfd->description));
 
     return ((rc == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES);
@@ -2213,6 +2214,8 @@ ble_gatts_peer_cl_sup_feat_update(uint16_t conn_handle, struct os_mbuf *om)
     uint16_t len;
     int rc = 0;
     int i;
+
+    BLE_HS_LOG(DEBUG, "");
 
     if (!om) {
         return BLE_ATT_ERR_INSUFFICIENT_RES;

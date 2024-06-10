@@ -19,6 +19,7 @@
 
 #include <inttypes.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
@@ -31,6 +32,9 @@ struct ble_store_value_sec
     ble_store_config_our_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
 #endif
 int ble_store_config_num_our_secs;
+
+uint16_t ble_store_config_our_bond_count;
+uint16_t ble_store_config_peer_bond_count;
 
 #if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
 struct ble_store_value_sec
@@ -65,6 +69,107 @@ int ble_store_config_num_local_irks;
 /*****************************************************************************
  * $sec                                                                      *
  *****************************************************************************/
+
+int ble_store_config_compare_bond_count(const void *a, const void *b) {
+    const struct ble_store_value_sec *sec_a = (const struct ble_store_value_sec *)a;
+    const struct ble_store_value_sec *sec_b = (const struct ble_store_value_sec *)b;
+
+    return sec_a->bond_count - sec_b->bond_count;
+}
+
+/* This function gets the stored device records of OUR_SEC object type, arranges them in order of their bond count,
+ * and then updates them with new counts so they're in sequence.
+ */
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
+int ble_restore_our_sec_nvs(void)
+{
+    int rc;
+    extern uint16_t ble_store_config_our_bond_count;
+    struct ble_store_value_sec temp_our_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int temp_count = 0;
+
+    ble_store_config_our_bond_count = 0;
+
+    memcpy(temp_our_secs, ble_store_config_our_secs, ble_store_config_num_our_secs * sizeof(struct ble_store_value_sec));
+    temp_count = ble_store_config_num_our_secs;
+
+    qsort(temp_our_secs, temp_count, sizeof(struct ble_store_value_sec), ble_store_config_compare_bond_count);
+
+    for (int i = 0; i < temp_count; i++) {
+
+        union ble_store_key key;
+        ble_store_key_from_value_sec(&key.sec, &temp_our_secs[i]);
+
+        rc = ble_store_config_delete(BLE_STORE_OBJ_TYPE_OUR_SEC, &key);
+
+        if (rc != 0) {
+            BLE_HS_LOG(DEBUG, "Error deleting from nvs");
+            return rc;
+        }
+    }
+
+    for (int i = 0; i < temp_count; i++) {
+
+        union ble_store_value val;
+        val.sec = temp_our_secs[i];
+
+        rc = ble_store_config_write(BLE_STORE_OBJ_TYPE_OUR_SEC, &val);
+
+        if (rc != 0) {
+            BLE_HS_LOG(DEBUG, "Error writing record to NVS");
+            return rc;
+        }
+    }
+
+    return 0;
+}
+
+/* This function gets the stored device records of PEER_SEC object type, arranges them in order of their bond count,
+ * and then updates them with new counts so they're in sequence.
+ */
+int ble_restore_peer_sec_nvs(void)
+{
+    int rc;
+    extern uint16_t ble_store_config_peer_bond_count;
+    struct ble_store_value_sec temp_peer_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int temp_count = 0;
+
+    ble_store_config_peer_bond_count = 0;
+
+    memcpy(temp_peer_secs, ble_store_config_peer_secs, ble_store_config_num_peer_secs * sizeof(struct ble_store_value_sec));
+    temp_count = ble_store_config_num_peer_secs;
+
+    qsort(temp_peer_secs, temp_count, sizeof(struct ble_store_value_sec), ble_store_config_compare_bond_count);
+
+    for (int i = 0; i < temp_count; i++) {
+
+        union ble_store_key key;
+        ble_store_key_from_value_sec(&key.sec, &temp_peer_secs[i]);
+
+        rc = ble_store_config_delete(BLE_STORE_OBJ_TYPE_PEER_SEC, &key);
+
+        if (rc != 0) {
+            BLE_HS_LOG(DEBUG, "Error deleting from nvs");
+            return rc;
+        }
+    }
+
+    for (int i = 0; i < temp_count; i++) {
+
+        union ble_store_value val;
+        val.sec = temp_peer_secs[i];
+
+        rc = ble_store_config_write(BLE_STORE_OBJ_TYPE_PEER_SEC, &val);
+
+        if (rc != 0) {
+            BLE_HS_LOG(DEBUG, "Error writing record to NVS");
+            return rc;
+        }
+    }
+
+    return 0;
+}
+#endif
 
 #if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
 static void
@@ -197,9 +302,18 @@ ble_store_config_write_our_sec(const struct ble_store_value_sec *value_sec)
 
     ble_store_config_our_secs[idx] = *value_sec;
 
+    ble_store_config_our_secs[idx].bond_count = ++ble_store_config_our_bond_count;
+
     rc = ble_store_config_persist_our_secs();
     if (rc != 0) {
         return rc;
+    }
+
+    if (ble_store_config_our_bond_count > (UINT16_MAX - 5)) {
+        rc = ble_restore_our_sec_nvs();
+        if (rc != 0) {
+            return rc;
+        }
     }
 
     return 0;
@@ -216,7 +330,7 @@ ble_store_config_delete_obj(void *values, int value_size, int idx,
 {
     uint8_t *dst;
     uint8_t *src;
-    int move_count;
+    uint8_t move_count;
 
     (*num_values)--;
     if (idx < *num_values) {
@@ -347,10 +461,20 @@ ble_store_config_write_peer_sec(const struct ble_store_value_sec *value_sec)
 
     ble_store_config_peer_secs[idx] = *value_sec;
 
+    ble_store_config_peer_secs[idx].bond_count = ++ble_store_config_peer_bond_count;
+
     rc = ble_store_config_persist_peer_secs();
     if (rc != 0) {
         return rc;
     }
+
+    if (ble_store_config_peer_bond_count > (UINT16_MAX - 5)) {
+        rc = ble_restore_peer_sec_nvs();
+        if (rc != 0) {
+            return rc;
+        }
+    }
+
     return 0;
 #else
     return BLE_HS_ENOENT;
