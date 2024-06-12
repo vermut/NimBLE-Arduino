@@ -102,7 +102,7 @@ esp_err_t esp_nimble_init(void)
     /* Initialize the function pointers for OS porting */
     npl_freertos_funcs_init();
 
-    npl_freertos_mempool_init();
+    npl_freertos_mempool_init_ovr();
 #endif
 
 #if false // Arduino disabled
@@ -118,7 +118,8 @@ esp_err_t esp_nimble_init(void)
     os_msys_init();
 
 #else
-    ble_npl_eventq_init(&g_eventq_dflt);
+    npl_freertos_mempool_init_ovr();
+    ble_npl_eventq_init(nimble_port_get_dflt_eventq());
 #endif
 
     /* Initialize the host */
@@ -201,7 +202,7 @@ nimble_port_init(void)
     /* Initialize the function pointers for OS porting */
     npl_freertos_funcs_init();
 
-    npl_freertos_mempool_init();
+    npl_freertos_mempool_init_ovr();
 #endif
     /* Initialize default event queue */
 

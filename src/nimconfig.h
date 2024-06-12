@@ -215,7 +215,7 @@
 #endif
 
 #ifndef CONFIG_NIMBLE_STACK_USE_MEM_POOLS
-#define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 0
+#define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 1
 #endif
 
 /** @brief Set if CCCD's and bond data should be stored in NVS */

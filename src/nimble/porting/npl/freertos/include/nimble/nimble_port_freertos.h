@@ -55,7 +55,7 @@ UBaseType_t nimble_port_freertos_get_hs_hwm(void);
 #if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
 void npl_freertos_funcs_init(void);
 void npl_freertos_funcs_deinit(void);
-int npl_freertos_mempool_init(void);
+int npl_freertos_mempool_init_ovr(void);
 struct npl_funcs_t * npl_freertos_funcs_get(void);
 #endif
 
