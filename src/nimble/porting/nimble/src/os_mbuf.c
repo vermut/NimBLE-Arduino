@@ -55,7 +55,7 @@
  *   @defgroup OSMqueue Queue of Mbufs
  *   @{
  */
-
+#if 0
 STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list =
     STAILQ_HEAD_INITIALIZER(g_msys_pool_list);
 
@@ -1258,3 +1258,4 @@ os_mbuf_pack_chains(struct os_mbuf *m1, struct os_mbuf *m2)
 
     return m1;
 }
+#endif

@@ -36,6 +36,9 @@
 #      include "soc/soc_caps.h"
 #    endif
 #  endif
+#endif
+
+#ifdef ESP_PLATFORM
 #include "esp_intr_alloc.h"
 #if CONFIG_BT_CONTROLLER_ENABLED
 #include "esp_bt.h"
@@ -100,7 +103,7 @@ esp_err_t esp_nimble_init(void)
     /* Initialize the function pointers for OS porting */
     npl_freertos_funcs_init();
 
-    npl_freertos_mempool_init();
+    npl_freertos_mempool_init_ovr();
 #endif
 
 #if CONFIG_BT_CONTROLLER_ENABLED
@@ -126,6 +129,9 @@ esp_err_t esp_nimble_init(void)
     os_mempool_module_init();
     os_msys_init();
 
+#else
+    npl_freertos_mempool_init_ovr();
+    ble_npl_eventq_init(nimble_port_get_dflt_eventq());
 #endif
     /* Initialize the host */
     ble_transport_hs_init();
@@ -213,12 +219,12 @@ nimble_port_init(void)
             ESP_LOGE(NIMBLE_PORT_LOG_TAG, "controller disable failed\n");
         }
 
-	if(esp_bt_controller_deinit() != ESP_OK) {
+	    if(esp_bt_controller_deinit() != ESP_OK) {
             ESP_LOGE(NIMBLE_PORT_LOG_TAG, "controller deinit failed\n");
         }
 #endif
 
-	ESP_LOGE(NIMBLE_PORT_LOG_TAG, "nimble host init failed\n");
+	    ESP_LOGE(NIMBLE_PORT_LOG_TAG, "nimble host init failed\n");
         return ret;
     }
 

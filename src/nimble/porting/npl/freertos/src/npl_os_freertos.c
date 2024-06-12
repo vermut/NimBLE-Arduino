@@ -44,7 +44,8 @@
 
 #include "soc/soc_caps.h"
 
-portMUX_TYPE ble_port_mutex = portMUX_INITIALIZER_UNLOCKED;
+//portMUX_TYPE ble_port_mutex = portMUX_INITIALIZER_UNLOCKED;
+extern portMUX_TYPE ble_port_mutex;
 
 #else
 #include "nrf.h"
@@ -122,19 +123,19 @@ static const char *TAG = "Timer";
 
 #if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
 
-struct os_mempool ble_freertos_ev_pool;
+extern struct os_mempool ble_freertos_ev_pool;
 static os_membuf_t *ble_freertos_ev_buf = NULL;
 
-struct os_mempool ble_freertos_evq_pool;
+extern struct os_mempool ble_freertos_evq_pool;
 static os_membuf_t *ble_freertos_evq_buf = NULL;
 
-struct os_mempool ble_freertos_co_pool;
+extern struct os_mempool ble_freertos_co_pool;
 static os_membuf_t *ble_freertos_co_buf = NULL;
 
-struct os_mempool ble_freertos_sem_pool;
+extern struct os_mempool ble_freertos_sem_pool;
 static os_membuf_t *ble_freertos_sem_buf = NULL;
 
-struct os_mempool ble_freertos_mutex_pool;
+extern struct os_mempool ble_freertos_mutex_pool;
 static os_membuf_t *ble_freertos_mutex_buf = NULL;
 
 #else
@@ -166,6 +167,7 @@ static os_membuf_t ble_freertos_mutex_buf[
 
 #endif
 
+#if 0
 bool
 npl_freertos_os_started(void)
 {
@@ -184,8 +186,8 @@ npl_freertos_event_init(struct ble_npl_event *ev, ble_npl_event_fn *fn,
 {
     struct ble_npl_event_freertos *event = NULL;
 #if OS_MEM_ALLOC
-    if (!os_memblock_from(&ble_freertos_ev_pool,ev->event)) {
-        ev->event = os_memblock_get(&ble_freertos_ev_pool);
+    if (!os_memblock_from(&ble_freertos_ev_pool_ovr,ev->event)) {
+        ev->event = os_memblock_get(&ble_freertos_ev_pool_ovr);
     }
 #else
     if(!ev->event) {
@@ -205,7 +207,7 @@ npl_freertos_event_deinit(struct ble_npl_event *ev)
 {
     PLATFORM_BLE_LL_ASSERT(ev->event);
 #if OS_MEM_ALLOC
-    os_memblock_put(&ble_freertos_ev_pool,ev->event);
+    os_memblock_put(&ble_freertos_ev_pool_ovr,ev->event);
 #else
     free(ev->event);
 #endif
@@ -225,8 +227,8 @@ npl_freertos_eventq_init(struct ble_npl_eventq *evq)
 {
     struct ble_npl_eventq_freertos *eventq = NULL;
 #if OS_MEM_ALLOC
-    if (!os_memblock_from(&ble_freertos_evq_pool,evq->eventq)) {
-        evq->eventq = os_memblock_get(&ble_freertos_evq_pool);
+    if (!os_memblock_from(&ble_freertos_evq_pool_ovr,evq->eventq)) {
+        evq->eventq = os_memblock_get(&ble_freertos_evq_pool_ovr);
         eventq = (struct ble_npl_eventq_freertos*)evq->eventq;
         PLATFORM_BLE_LL_ASSERT(eventq);
 
@@ -255,7 +257,7 @@ npl_freertos_eventq_deinit(struct ble_npl_eventq *evq)
     PLATFORM_BLE_LL_ASSERT(eventq);
     vQueueDelete(eventq->q);
 #if OS_MEM_ALLOC
-    os_memblock_put(&ble_freertos_evq_pool,eventq);
+    os_memblock_put(&ble_freertos_evq_pool_ovr,eventq);
 #else
     free((void *)eventq);
 #endif
@@ -473,8 +475,8 @@ npl_freertos_mutex_init(struct ble_npl_mutex *mu)
 {
     struct ble_npl_mutex_freertos *mutex = NULL;
 #if OS_MEM_ALLOC
-    if (!os_memblock_from(&ble_freertos_mutex_pool,mu->mutex)) {
-        mu->mutex = os_memblock_get(&ble_freertos_mutex_pool);
+    if (!os_memblock_from(&ble_freertos_mutex_pool_ovr,mu->mutex)) {
+        mu->mutex = os_memblock_get(&ble_freertos_mutex_pool_ovr);
         mutex = (struct ble_npl_mutex_freertos *)mu->mutex;
 
         if (!mutex) {
@@ -516,7 +518,7 @@ npl_freertos_mutex_deinit(struct ble_npl_mutex *mu)
     vSemaphoreDelete(mutex->handle);
 
 #if OS_MEM_ALLOC
-    os_memblock_put(&ble_freertos_mutex_pool,mutex);
+    os_memblock_put(&ble_freertos_mutex_pool_ovr,mutex);
 #else
     free((void *)mutex);
 #endif
@@ -620,8 +622,8 @@ npl_freertos_sem_init(struct ble_npl_sem *sem, uint16_t tokens)
 {
     struct ble_npl_sem_freertos *semaphor = NULL;
 #if OS_MEM_ALLOC
-    if (!os_memblock_from(&ble_freertos_sem_pool,sem->sem)) {
-        sem->sem = os_memblock_get(&ble_freertos_sem_pool);
+    if (!os_memblock_from(&ble_freertos_sem_pool_ovr,sem->sem)) {
+        sem->sem = os_memblock_get(&ble_freertos_sem_pool_ovr);
         semaphor = (struct ble_npl_sem_freertos *)sem->sem;
 
         if (!semaphor) {
@@ -663,7 +665,7 @@ npl_freertos_sem_deinit(struct ble_npl_sem *sem)
     vSemaphoreDelete(semaphor->handle);
 
 #if OS_MEM_ALLOC
-    os_memblock_put(&ble_freertos_sem_pool,semaphor);
+    os_memblock_put(&ble_freertos_sem_pool_ovr,semaphor);
 #else
     free((void *)semaphor);
 #endif
@@ -790,8 +792,8 @@ npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq
     struct ble_npl_callout_freertos *callout = NULL;
 
 #if OS_MEM_ALLOC
-    if (!os_memblock_from(&ble_freertos_co_pool, co->co)) {
-        co->co = os_memblock_get(&ble_freertos_co_pool);
+    if (!os_memblock_from(&ble_freertos_co_pool_ovr, co->co)) {
+        co->co = os_memblock_get(&ble_freertos_co_pool_ovr);
         callout = (struct ble_npl_callout_freertos *)co->co;
         PLATFORM_BLE_LL_ASSERT(callout);
 
@@ -901,7 +903,7 @@ npl_freertos_callout_deinit(struct ble_npl_callout *co)
 #endif
 
 #if OS_MEM_ALLOC
-    os_memblock_put(&ble_freertos_co_pool,callout);
+    os_memblock_put(&ble_freertos_co_pool_ovr,callout);
 #else
     free((void *)callout);
 #endif
@@ -1179,7 +1181,112 @@ npl_freertos_get_time_forever(void)
 {
     return portMAX_DELAY;
 }
+#endif
 
+#ifdef ESP_PLATFORM
+static inline bool
+IRAM_ATTR in_isr(void)
+{
+    /* XXX hw specific! */
+    return xPortInIsrContext() != 0;
+}
+
+#else
+static inline bool
+in_isr(void)
+{
+    /* XXX hw specific! */
+    return (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+}
+
+void
+RADIO_IRQHandler(void)
+{
+    ((void (*)(void))radio_isr_addr)();
+}
+
+void
+RNG_IRQHandler(void)
+{
+    ((void (*)(void))rng_isr_addr)();
+}
+
+void
+RTC0_IRQHandler(void)
+{
+    ((void (*)(void))rtc0_isr_addr)();
+}
+
+/* This is called by NimBLE radio driver to set interrupt handlers */
+void
+npl_freertos_hw_set_isr(int irqn, void (*addr)(void))
+{
+    switch (irqn) {
+    case RADIO_IRQn:
+        radio_isr_addr = addr;
+        break;
+    case RNG_IRQn:
+        rng_isr_addr = addr;
+        break;
+    case RTC0_IRQn:
+        rtc0_isr_addr = addr;
+        break;
+    }
+}
+#endif
+
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+static void
+IRAM_ATTR ble_npl_event_fn_wrapper(void *arg)
+{
+    struct ble_npl_callout_freertos *callout = (struct ble_npl_callout_freertos *)arg;
+    PLATFORM_BLE_LL_ASSERT(callout);
+
+    if (callout->evq) {
+        ble_npl_eventq_put(callout->evq, &callout->ev);
+    } else {
+        struct ble_npl_event_freertos *event = (struct ble_npl_event_freertos *)callout->ev.event;
+        event->fn(&callout->ev);
+    }
+}
+
+static
+IRAM_ATTR ble_npl_error_t esp_err_to_npl_error(esp_err_t err)
+{
+    switch(err) {
+    case ESP_ERR_INVALID_ARG:
+        return BLE_NPL_INVALID_PARAM;
+
+    case ESP_ERR_INVALID_STATE:
+        return BLE_NPL_EINVAL;
+
+    case ESP_OK:
+        return BLE_NPL_OK;
+
+   default:
+        return BLE_NPL_ERROR;
+    }
+}
+#else
+
+static void
+IRAM_ATTR os_callout_timer_cb(TimerHandle_t timer)
+{
+    struct ble_npl_callout_freertos *callout;
+
+    callout = pvTimerGetTimerID(timer);
+    PLATFORM_BLE_LL_ASSERT(callout);
+
+    if (callout->evq) {
+        ble_npl_eventq_put(callout->evq, &callout->ev);
+    } else {
+        struct ble_npl_event_freertos *event = (struct ble_npl_event_freertos *)callout->ev.event;
+        event->fn(&callout->ev);
+    }
+}
+#endif
+
+#if 0
 const struct npl_funcs_t npl_funcs_ro = {
     .p_ble_npl_os_started = npl_freertos_os_started,
     .p_ble_npl_get_current_task_id = npl_freertos_get_current_task_id,
@@ -1245,8 +1352,9 @@ void npl_freertos_funcs_init(void)
     }
     memcpy(npl_funcs, &npl_funcs_ro, sizeof(struct npl_funcs_t));
 }
+#endif
 
-int npl_freertos_mempool_init(void)
+int npl_freertos_mempool_init_ovr(void)
 {
     int rc = -1;
 
@@ -1339,7 +1447,7 @@ _error:
 #endif
 }
 
-void npl_freertos_mempool_deinit(void)
+void npl_freertos_mempool_deinit_ovr(void)
 {
 #if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
     if(ble_freertos_ev_buf) {
@@ -1364,7 +1472,7 @@ void npl_freertos_mempool_deinit(void)
     }
 #endif
 }
-
+#if 0
 void npl_freertos_funcs_deinit(void)
 {
     if (npl_funcs) {
@@ -1372,7 +1480,7 @@ void npl_freertos_funcs_deinit(void)
     }
     npl_funcs = NULL;
 }
-
+#endif
 #else // Not using MEM pools
 
 #include <assert.h>
@@ -1448,6 +1556,7 @@ npl_freertos_hw_set_isr(int irqn, void (*addr)(void))
 }
 #endif
 
+#if 0
 struct ble_npl_event *
 npl_freertos_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo)
 {
@@ -1980,5 +2089,5 @@ npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms)
 
     return 0;
 }
-
+#endif
 #endif // CONFIG_NIMBLE_STACK_USE_MEM_POOLS

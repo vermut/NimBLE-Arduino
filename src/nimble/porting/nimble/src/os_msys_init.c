@@ -185,7 +185,7 @@ os_msys_buf_free(void)
 
 }
 #endif
-
+#if 0
 void os_msys_init(void)
 {
 #if OS_MSYS_SANITY_ENABLED
@@ -220,3 +220,4 @@ void os_msys_init(void)
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 }
+#endif

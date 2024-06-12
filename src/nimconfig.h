@@ -215,7 +215,7 @@
 #endif
 
 #ifndef CONFIG_NIMBLE_STACK_USE_MEM_POOLS
-#define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 0
+#define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 1
 #endif
 
 /** @brief Set if CCCD's and bond data should be stored in NVS */
@@ -288,7 +288,8 @@
 #define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE 2
 #endif
 
-#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && \
+!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6)
 #define CONFIG_IDF_TARGET_ESP32 1
 #endif
 

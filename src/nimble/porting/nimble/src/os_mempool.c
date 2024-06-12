@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+#if 0
 #include "../include/os/os.h"
 #include "../include/os/os_trace_api.h"
 
@@ -484,3 +484,4 @@ os_mempool_module_init(void)
 {
     STAILQ_INIT(&g_os_mempool_list);
 }
+#endif
