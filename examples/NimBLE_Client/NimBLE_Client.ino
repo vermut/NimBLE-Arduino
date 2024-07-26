@@ -112,7 +112,7 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
     std::string str = (isNotify == true) ? "Notification" : "Indication";
     str += " from ";
     /** NimBLEAddress and NimBLEUUID have std::string operators */
-    str += std::string(pRemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress());
+    str += std::string(pRemoteCharacteristic->getClient()->getPeerAddress());
     str += ": Service = " + std::string(pRemoteCharacteristic->getRemoteService()->getUUID());
     str += ", Characteristic = " + std::string(pRemoteCharacteristic->getUUID());
     str += ", Value = " + std::string((char*)pData, length);
